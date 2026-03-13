@@ -20,6 +20,9 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Execute: mvn -q -DskipTests clean compile exec:java
+ */
 public class Server {
     private static final int PORT = 8000;
     private static final Gson GSON = new Gson();
@@ -34,7 +37,8 @@ public class Server {
     }
 
     static class StaticHandler implements HttpHandler {
-        private final Path baseDir = Paths.get("").toAbsolutePath();
+        private final Path baseDir = Paths.get("").toAbsolutePath()
+                .resolve("src/main/resources/static");
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {

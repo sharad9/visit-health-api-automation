@@ -1,0 +1,393 @@
+export class Style {
+
+    static #KeyEnum = class StyleKey {
+        #value;
+        constructor(value) { this.#value = value; Object.freeze(this); }
+        toString() { return this.#value; }
+    };
+
+    static #ValueEnum = class StyleValue {
+        #value;
+        constructor(value) { this.#value = value; Object.freeze(this); }
+        toString() { return this.#value; }
+    };
+
+    static Key = Object.freeze({
+        WIDTH:                  new this.#KeyEnum('width'),
+        HEIGHT:                 new this.#KeyEnum('height'),
+        MIN_WIDTH:              new this.#KeyEnum('minWidth'),
+        MIN_HEIGHT:             new this.#KeyEnum('minHeight'),
+        MAX_WIDTH:              new this.#KeyEnum('maxWidth'),
+        MAX_HEIGHT:             new this.#KeyEnum('maxHeight'),
+        PADDING:                new this.#KeyEnum('padding'),
+        PADDING_TOP:            new this.#KeyEnum('paddingTop'),
+        PADDING_BOTTOM:         new this.#KeyEnum('paddingBottom'),
+        PADDING_LEFT:           new this.#KeyEnum('paddingLeft'),
+        PADDING_RIGHT:          new this.#KeyEnum('paddingRight'),
+        MARGIN:                 new this.#KeyEnum('margin'),
+        MARGIN_TOP:             new this.#KeyEnum('marginTop'),
+        MARGIN_BOTTOM:          new this.#KeyEnum('marginBottom'),
+        MARGIN_LEFT:            new this.#KeyEnum('marginLeft'),
+        MARGIN_RIGHT:           new this.#KeyEnum('marginRight'),
+        BORDER:                 new this.#KeyEnum('border'),
+        BORDER_TOP:             new this.#KeyEnum('borderTop'),
+        BORDER_BOTTOM:          new this.#KeyEnum('borderBottom'),
+        BORDER_LEFT:            new this.#KeyEnum('borderLeft'),
+        BORDER_RIGHT:           new this.#KeyEnum('borderRight'),
+        BORDER_RADIUS:          new this.#KeyEnum('borderRadius'),
+        BOX_SIZING:             new this.#KeyEnum('boxSizing'),
+        BOX_SHADOW:             new this.#KeyEnum('boxShadow'),
+        OUTLINE:                new this.#KeyEnum('outline'),
+        DISPLAY:                new this.#KeyEnum('display'),
+        POSITION:               new this.#KeyEnum('position'),
+        TOP:                    new this.#KeyEnum('top'),
+        RIGHT:                  new this.#KeyEnum('right'),
+        BOTTOM:                 new this.#KeyEnum('bottom'),
+        LEFT:                   new this.#KeyEnum('left'),
+        Z_INDEX:                new this.#KeyEnum('zIndex'),
+        OVERFLOW:               new this.#KeyEnum('overflow'),
+        OVERFLOW_X:             new this.#KeyEnum('overflowX'),
+        OVERFLOW_Y:             new this.#KeyEnum('overflowY'),
+        FLOAT:                  new this.#KeyEnum('float'),
+        CLEAR:                  new this.#KeyEnum('clear'),
+        VISIBILITY:             new this.#KeyEnum('visibility'),
+        CLIP_PATH:              new this.#KeyEnum('clipPath'),
+        INSET:                  new this.#KeyEnum('inset'),
+        INSET_BLOCK:            new this.#KeyEnum('insetBlock'),
+        INSET_INLINE:           new this.#KeyEnum('insetInline'),
+
+        FLEX:                   new this.#KeyEnum('flex'),
+        FLEX_DIRECTION:         new this.#KeyEnum('flexDirection'),
+        JUSTIFY_CONTENT:        new this.#KeyEnum('justifyContent'),
+        ALIGN_ITEMS:            new this.#KeyEnum('alignItems'),
+        ALIGN_CONTENT:          new this.#KeyEnum('alignContent'),
+        ALIGN_SELF:             new this.#KeyEnum('alignSelf'),
+        FLEX_WRAP:              new this.#KeyEnum('flexWrap'),
+        FLEX_GROW:              new this.#KeyEnum('flexGrow'),
+        FLEX_SHRINK:            new this.#KeyEnum('flexShrink'),
+        ORDER:                  new this.#KeyEnum('order'),
+        GAP:                    new this.#KeyEnum('gap'),
+
+        GRID_AREA:              new this.#KeyEnum('gridArea'),
+        GRID_TEMPLATE_AREAS:    new this.#KeyEnum('gridTemplateAreas'),
+        GRID_TEMPLATE_COLUMNS:  new this.#KeyEnum('gridTemplateColumns'),
+        GRID_TEMPLATE_ROWS:     new this.#KeyEnum('gridTemplateRows'),
+        GRID_COLUMN_GAP:        new this.#KeyEnum('columnGap'),
+        GRID_ROW_GAP:           new this.#KeyEnum('rowGap'),
+        GRID_GAP:               new this.#KeyEnum('gap'),
+        PLACE_ITEMS:            new this.#KeyEnum('placeItems'),
+        ALIGN_TRACKS:           new this.#KeyEnum('alignTracks'),
+        JUSTIFY_TRACKS:         new this.#KeyEnum('justifyTracks'),
+
+        COLOR:                  new this.#KeyEnum('color'),
+        FONT_SIZE:              new this.#KeyEnum('fontSize'),
+        FONT_WEIGHT:            new this.#KeyEnum('fontWeight'),
+        FONT_FAMILY:            new this.#KeyEnum('fontFamily'),
+        FONT_STYLE:             new this.#KeyEnum('fontStyle'),
+        TEXT_ALIGN:             new this.#KeyEnum('textAlign'),
+        TEXT_DECORATION:        new this.#KeyEnum('textDecoration'),
+        LINE_HEIGHT:            new this.#KeyEnum('lineHeight'),
+        LETTER_SPACING:         new this.#KeyEnum('letterSpacing'),
+        WHITE_SPACE:            new this.#KeyEnum('whiteSpace'),
+        WORD_BREAK:             new this.#KeyEnum('wordBreak'),
+        LINE_CLAMP:             new this.#KeyEnum('-webkit-line-clamp'),
+        TEXT_OVERFLOW:          new this.#KeyEnum('textOverflow'),
+        OVERFLOW_WRAP:          new this.#KeyEnum('overflowWrap'),
+        WORD_WRAP:              new this.#KeyEnum('wordWrap'),
+        VERTICAL_ALIGN:         new this.#KeyEnum('verticalAlign'),
+        CARET_COLOR:            new this.#KeyEnum('caretColor'),
+
+        BACKGROUND_COLOR:       new this.#KeyEnum('backgroundColor'),
+        BACKGROUND_IMAGE:       new this.#KeyEnum('backgroundImage'),
+        BACKGROUND_SIZE:        new this.#KeyEnum('backgroundSize'),
+        BACKGROUND_REPEAT:      new this.#KeyEnum('backgroundRepeat'),
+        BACKGROUND_POSITION:    new this.#KeyEnum('backgroundPosition'),
+        BACKDROP_FILTER:        new this.#KeyEnum('backdropFilter'),
+
+        OPACITY:                new this.#KeyEnum('opacity'),
+        TRANSFORM:              new this.#KeyEnum('transform'),
+        TRANSITION:             new this.#KeyEnum('transition'),
+        ANIMATION:              new this.#KeyEnum('animation'),
+        FILTER:                 new this.#KeyEnum('filter'),
+        MIX_BLEND_MODE:         new this.#KeyEnum('mixBlendMode'),
+        ISOLATION:              new this.#KeyEnum('isolation'),
+
+        CURSOR:                 new this.#KeyEnum('cursor'),
+        USER_SELECT:            new this.#KeyEnum('userSelect'),
+        POINTER_EVENTS:         new this.#KeyEnum('pointerEvents'),
+        ASPECT_RATIO:           new this.#KeyEnum('aspectRatio'),
+        TOUCH_ACTION:           new this.#KeyEnum('touchAction'),
+        CONTENT:                new this.#KeyEnum('content'),
+        TAB_INDEX:              new this.#KeyEnum('tabIndex'),
+        SCROLL_BEHAVIOR:        new this.#KeyEnum('scrollBehavior'),
+        SCROLL_SNAP_TYPE:       new this.#KeyEnum('scrollSnapType'),
+        SCROLL_PADDING:         new this.#KeyEnum('scrollPadding'),
+        OBJECT_FIT:             new this.#KeyEnum('objectFit'),
+        OBJECT_POSITION:        new this.#KeyEnum('objectPosition'),
+        LIST_STYLE:             new this.#KeyEnum('listStyle'),
+        LIST_STYLE_TYPE:        new this.#KeyEnum('listStyleType'),
+        LIST_STYLE_POSITION:    new this.#KeyEnum('listStylePosition'),
+        DISPLAY_PRINT:          new this.#KeyEnum('display'),
+
+        // Text
+        TEXT_TRANSFORM:               new this.#KeyEnum('textTransform'),
+        TEXT_SHADOW:                  new this.#KeyEnum('textShadow'),
+        TEXT_INDENT:                  new this.#KeyEnum('textIndent'),
+        WORD_SPACING:                 new this.#KeyEnum('wordSpacing'),
+
+        // Border details
+        BORDER_WIDTH:                 new this.#KeyEnum('borderWidth'),
+        BORDER_STYLE:                 new this.#KeyEnum('borderStyle'),
+        BORDER_COLOR:                 new this.#KeyEnum('borderColor'),
+        BORDER_COLLAPSE:              new this.#KeyEnum('borderCollapse'),
+        BORDER_SPACING:               new this.#KeyEnum('borderSpacing'),
+        BORDER_IMAGE:                 new this.#KeyEnum('borderImage'),
+
+        // Outline details
+        OUTLINE_WIDTH:                new this.#KeyEnum('outlineWidth'),
+        OUTLINE_STYLE:                new this.#KeyEnum('outlineStyle'),
+        OUTLINE_COLOR:                new this.#KeyEnum('outlineColor'),
+        OUTLINE_OFFSET:               new this.#KeyEnum('outlineOffset'),
+
+        // Flex
+        FLEX_BASIS:                   new this.#KeyEnum('flexBasis'),
+        FLEX_FLOW:                    new this.#KeyEnum('flexFlow'),
+
+        // Grid (extended)
+        GRID_COLUMN:                  new this.#KeyEnum('gridColumn'),
+        GRID_ROW:                     new this.#KeyEnum('gridRow'),
+        GRID_COLUMN_START:            new this.#KeyEnum('gridColumnStart'),
+        GRID_COLUMN_END:              new this.#KeyEnum('gridColumnEnd'),
+        GRID_ROW_START:               new this.#KeyEnum('gridRowStart'),
+        GRID_ROW_END:                 new this.#KeyEnum('gridRowEnd'),
+        GRID_AUTO_COLUMNS:            new this.#KeyEnum('gridAutoColumns'),
+        GRID_AUTO_ROWS:               new this.#KeyEnum('gridAutoRows'),
+        GRID_AUTO_FLOW:               new this.#KeyEnum('gridAutoFlow'),
+        JUSTIFY_ITEMS:                new this.#KeyEnum('justifyItems'),
+        JUSTIFY_SELF:                 new this.#KeyEnum('justifySelf'),
+        PLACE_CONTENT:                new this.#KeyEnum('placeContent'),
+        PLACE_SELF:                   new this.#KeyEnum('placeSelf'),
+
+        // Transform / 3D
+        TRANSFORM_ORIGIN:             new this.#KeyEnum('transformOrigin'),
+        TRANSFORM_STYLE:              new this.#KeyEnum('transformStyle'),
+        PERSPECTIVE:                  new this.#KeyEnum('perspective'),
+        PERSPECTIVE_ORIGIN:           new this.#KeyEnum('perspectiveOrigin'),
+        BACKFACE_VISIBILITY:          new this.#KeyEnum('backfaceVisibility'),
+
+        // Background (extended)
+        BACKGROUND_ATTACHMENT:        new this.#KeyEnum('backgroundAttachment'),
+        BACKGROUND_CLIP:              new this.#KeyEnum('backgroundClip'),
+        BACKGROUND_ORIGIN:            new this.#KeyEnum('backgroundOrigin'),
+        BACKGROUND_BLEND_MODE:        new this.#KeyEnum('backgroundBlendMode'),
+
+        // Animation sub-properties
+        ANIMATION_NAME:               new this.#KeyEnum('animationName'),
+        ANIMATION_DURATION:           new this.#KeyEnum('animationDuration'),
+        ANIMATION_DELAY:              new this.#KeyEnum('animationDelay'),
+        ANIMATION_TIMING_FUNCTION:    new this.#KeyEnum('animationTimingFunction'),
+        ANIMATION_ITERATION_COUNT:    new this.#KeyEnum('animationIterationCount'),
+        ANIMATION_DIRECTION:          new this.#KeyEnum('animationDirection'),
+        ANIMATION_FILL_MODE:          new this.#KeyEnum('animationFillMode'),
+        ANIMATION_PLAY_STATE:         new this.#KeyEnum('animationPlayState'),
+
+        // Transition sub-properties
+        TRANSITION_PROPERTY:          new this.#KeyEnum('transitionProperty'),
+        TRANSITION_DURATION:          new this.#KeyEnum('transitionDuration'),
+        TRANSITION_DELAY:             new this.#KeyEnum('transitionDelay'),
+        TRANSITION_TIMING_FUNCTION:   new this.#KeyEnum('transitionTimingFunction'),
+
+        // Scroll (extended)
+        SCROLL_MARGIN:                new this.#KeyEnum('scrollMargin'),
+        SCROLL_SNAP_ALIGN:            new this.#KeyEnum('scrollSnapAlign'),
+        OVERSCROLL_BEHAVIOR:          new this.#KeyEnum('overscrollBehavior'),
+
+        // Columns
+        COLUMN_COUNT:                 new this.#KeyEnum('columnCount'),
+        COLUMN_WIDTH:                 new this.#KeyEnum('columnWidth'),
+        COLUMN_RULE:                  new this.#KeyEnum('columnRule'),
+        COLUMN_SPAN:                  new this.#KeyEnum('columnSpan'),
+        COLUMNS:                      new this.#KeyEnum('columns'),
+
+        // Misc
+        RESIZE:                       new this.#KeyEnum('resize'),
+        APPEARANCE:                   new this.#KeyEnum('appearance'),
+        WILL_CHANGE:                  new this.#KeyEnum('willChange'),
+    });
+
+    static Value = Object.freeze({
+        AUTO:                   new this.#ValueEnum('auto'),
+        DEFAULT:                new this.#ValueEnum('default'),
+        POINTER:                new this.#ValueEnum('pointer'),
+        WAIT:                   new this.#ValueEnum('wait'),
+        TEXT:                   new this.#ValueEnum('text'),
+        MOVE:                   new this.#ValueEnum('move'),
+        NOT_ALLOWED:            new this.#ValueEnum('not-allowed'),
+        CROSSHAIR:              new this.#ValueEnum('crosshair'),
+        HELP:                   new this.#ValueEnum('help'),
+        PROGRESS:               new this.#ValueEnum('progress'),
+        GRAB:                   new this.#ValueEnum('grab'),
+        GRABBING:               new this.#ValueEnum('grabbing'),
+        NONE:                   new this.#ValueEnum('none'),
+        ALL_SCROLL:             new this.#ValueEnum('all-scroll'),
+        COL_RESIZE:             new this.#ValueEnum('col-resize'),
+        ROW_RESIZE:             new this.#ValueEnum('row-resize'),
+        VERTICAL_TEXT:          new this.#ValueEnum('vertical-text'),
+        CONTEXT_MENU:           new this.#ValueEnum('context-menu'),
+        CELL:                   new this.#ValueEnum('cell'),
+        ZOOM_IN:                new this.#ValueEnum('zoom-in'),
+        ZOOM_OUT:               new this.#ValueEnum('zoom-out'),
+        ALIAS:                  new this.#ValueEnum('alias'),
+        COPY:                   new this.#ValueEnum('copy'),
+        NO_DROP:                new this.#ValueEnum('no-drop'),
+        OPEN_HAND:              new this.#ValueEnum('open-hand'),
+        CLOSED_HAND:            new this.#ValueEnum('closed-hand'),
+        BLOCK:                  new this.#ValueEnum('block'),
+        INLINE:                 new this.#ValueEnum('inline'),
+        INLINE_BLOCK:           new this.#ValueEnum('inline-block'),
+        FLEX:                   new this.#ValueEnum('flex'),
+        INLINE_FLEX:            new this.#ValueEnum('inline-flex'),
+        GRID:                   new this.#ValueEnum('grid'),
+        INLINE_GRID:            new this.#ValueEnum('inline-grid'),
+        TABLE:                  new this.#ValueEnum('table'),
+        TABLE_ROW:              new this.#ValueEnum('table-row'),
+        TABLE_CELL:             new this.#ValueEnum('table-cell'),
+        LIST_ITEM:              new this.#ValueEnum('list-item'),
+        RUN_IN:                 new this.#ValueEnum('run-in'),
+        FLOW_ROOT:              new this.#ValueEnum('flow-root'),
+        INITIAL:                new this.#ValueEnum('initial'),
+        INHERIT:                new this.#ValueEnum('inherit'),
+        REVERT:                 new this.#ValueEnum('revert'),
+        UNSET:                  new this.#ValueEnum('unset'),
+        TRANSPARENT:            new this.#ValueEnum('transparent'),
+        BLACK:                  new this.#ValueEnum('black'),
+        WHITE:                  new this.#ValueEnum('white'),
+        RED:                    new this.#ValueEnum('red'),
+        GREEN:                  new this.#ValueEnum('green'),
+        BLUE:                   new this.#ValueEnum('blue'),
+        YELLOW:                 new this.#ValueEnum('yellow'),
+        CYAN:                   new this.#ValueEnum('cyan'),
+        MAGENTA:                new this.#ValueEnum('magenta'),
+        GRAY:                   new this.#ValueEnum('gray'),
+        LIGHTGRAY:              new this.#ValueEnum('lightgray'),
+        DARKGRAY:               new this.#ValueEnum('darkgray'),
+        ORANGE:                 new this.#ValueEnum('orange'),
+        PURPLE:                 new this.#ValueEnum('purple'),
+        BROWN:                  new this.#ValueEnum('brown'),
+        PINK:                   new this.#ValueEnum('pink'),
+        LIME:                   new this.#ValueEnum('lime'),
+        NAVY:                   new this.#ValueEnum('navy'),
+        TEAL:                   new this.#ValueEnum('teal'),
+        OLIVE:                  new this.#ValueEnum('olive'),
+        MAROON:                 new this.#ValueEnum('maroon'),
+        SILVER:                 new this.#ValueEnum('silver'),
+        GOLD:                   new this.#ValueEnum('gold'),
+        CORAL:                  new this.#ValueEnum('coral'),
+        TOMATO:                 new this.#ValueEnum('tomato'),
+        SALMON:                 new this.#ValueEnum('salmon'),
+        STATIC:                 new this.#ValueEnum('static'),
+        RELATIVE:               new this.#ValueEnum('relative'),
+        ABSOLUTE:               new this.#ValueEnum('absolute'),
+        FIXED:                  new this.#ValueEnum('fixed'),
+        STICKY:                 new this.#ValueEnum('sticky'),
+        VISIBLE:                new this.#ValueEnum('visible'),
+        HIDDEN:                 new this.#ValueEnum('hidden'),
+        SCROLL:                 new this.#ValueEnum('scroll'),
+        CLIP:                   new this.#ValueEnum('clip'),
+        ROW:                    new this.#ValueEnum('row'),
+        ROW_REVERSE:            new this.#ValueEnum('row-reverse'),
+        COLUMN:                 new this.#ValueEnum('column'),
+        COLUMN_REVERSE:         new this.#ValueEnum('column-reverse'),
+        FLEX_START:             new this.#ValueEnum('flex-start'),
+        FLEX_END:               new this.#ValueEnum('flex-end'),
+        CENTER:                 new this.#ValueEnum('center'),
+        SPACE_BETWEEN:          new this.#ValueEnum('space-between'),
+        SPACE_AROUND:           new this.#ValueEnum('space-around'),
+        SPACE_EVENLY:           new this.#ValueEnum('space-evenly'),
+        BASELINE:               new this.#ValueEnum('baseline'),
+        STRETCH:                new this.#ValueEnum('stretch'),
+        NORMAL:                 new this.#ValueEnum('normal'),
+        BOLD:                   new this.#ValueEnum('bold'),
+        BOLDER:                 new this.#ValueEnum('bolder'),
+        LIGHTER:                new this.#ValueEnum('lighter'),
+        LEFT:                   new this.#ValueEnum('left'),
+        RIGHT:                  new this.#ValueEnum('right'),
+        JUSTIFY:                new this.#ValueEnum('justify'),
+        START:                  new this.#ValueEnum('start'),
+        END:                    new this.#ValueEnum('end'),
+        WRAP:                   new this.#ValueEnum('wrap'),
+        NOWRAP:                 new this.#ValueEnum('nowrap'),
+        PRE:                    new this.#ValueEnum('pre'),
+        PRE_LINE:               new this.#ValueEnum('pre-line'),
+        PRE_WRAP:               new this.#ValueEnum('pre-wrap'),
+        BREAK_SPACES:           new this.#ValueEnum('break-spaces'),
+        DOTTED:                 new this.#ValueEnum('dotted'),
+        DASHED:                 new this.#ValueEnum('dashed'),
+        SOLID:                  new this.#ValueEnum('solid'),
+        DOUBLE:                 new this.#ValueEnum('double'),
+        GROOVE:                 new this.#ValueEnum('groove'),
+        RIDGE:                  new this.#ValueEnum('ridge'),
+        INSET:                  new this.#ValueEnum('inset'),
+        OUTSET:                 new this.#ValueEnum('outset'),
+        CONTENT_BOX:            new this.#ValueEnum('content-box'),
+        BORDER_BOX:             new this.#ValueEnum('border-box'),
+        SUB:                    new this.#ValueEnum('sub'),
+        SUPER:                  new this.#ValueEnum('super'),
+        TEXT_TOP:               new this.#ValueEnum('text-top'),
+        TEXT_BOTTOM:            new this.#ValueEnum('text-bottom'),
+        MIDDLE:                 new this.#ValueEnum('middle'),
+        TOP:                    new this.#ValueEnum('top'),
+        BOTTOM:                 new this.#ValueEnum('bottom'),
+        DISC:                   new this.#ValueEnum('disc'),
+        CIRCLE:                 new this.#ValueEnum('circle'),
+        SQUARE:                 new this.#ValueEnum('square'),
+        DECIMAL:                new this.#ValueEnum('decimal'),
+        DECIMAL_LEADING_ZERO:   new this.#ValueEnum('decimal-leading-zero'),
+        LOWER_ROMAN:            new this.#ValueEnum('lower-roman'),
+        UPPER_ROMAN:            new this.#ValueEnum('upper-roman'),
+        LOWER_GREEK:            new this.#ValueEnum('lower-greek'),
+        LOWER_ALPHA:            new this.#ValueEnum('lower-alpha'),
+        UPPER_ALPHA:            new this.#ValueEnum('upper-alpha'),
+        BREAK_WORD:             new this.#ValueEnum('break-word'),
+        UNDERLINE:              new this.#ValueEnum('underline'),
+        OVERLINE:               new this.#ValueEnum('overline'),
+        LINE_THROUGH:           new this.#ValueEnum('line-through'),
+        BLINK:                  new this.#ValueEnum('blink'),
+        CONTAIN:                new this.#ValueEnum('contain'),
+        ALL:                    new this.#ValueEnum('all'),
+        ELEMENT:                new this.#ValueEnum('element'),
+        VISIBLE_PAINTED:        new this.#ValueEnum('visiblePainted'),
+        VISIBLE_FILL:           new this.#ValueEnum('visibleFill'),
+        VISIBLE_STROKE:         new this.#ValueEnum('visibleStroke'),
+        PAINTED:                new this.#ValueEnum('painted'),
+        FILL:                   new this.#ValueEnum('fill'),
+        STROKE:                 new this.#ValueEnum('stroke'),
+    });
+
+    #component;
+    #style = {};
+
+    constructor(component) {
+        this.#component = component;
+    }
+
+    set(key, value) {
+        const element = this.#component.getElement();
+        if (value === null || value === undefined) {
+            delete this.#style[key];
+            element.style.removeProperty(key.toString());
+        } else {
+            this.#style[key] = value;
+            element.style[key.toString()] = value.toString();
+        }
+        return this;
+    }
+
+    get(key) {
+        return this.#component.getElement().style[key.toString()];
+    }
+
+    remove(key) {
+        return this.set(key, null);
+    }
+}
