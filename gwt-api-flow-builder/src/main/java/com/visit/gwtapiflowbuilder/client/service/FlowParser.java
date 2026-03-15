@@ -1,18 +1,7 @@
 package com.visit.gwtapiflowbuilder.client.service;
 
-import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONBoolean;
-import com.google.gwt.json.client.JSONNull;
-import com.google.gwt.json.client.JSONNumber;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONString;
-import com.google.gwt.json.client.JSONValue;
-import com.visit.gwtapiflowbuilder.client.model.CheckData;
-import com.visit.gwtapiflowbuilder.client.model.EnvironmentItem;
-import com.visit.gwtapiflowbuilder.client.model.KeyValuePair;
-import com.visit.gwtapiflowbuilder.client.model.ParsedData;
-import com.visit.gwtapiflowbuilder.client.model.StepData;
+import com.google.gwt.json.client.*;
+import com.visit.gwtapiflowbuilder.client.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +12,8 @@ import java.util.List;
  */
 public final class FlowParser {
 
-    private FlowParser() {}
+    private FlowParser() {
+    }
 
     // -------------------------------------------------------------------------
     // Entry point

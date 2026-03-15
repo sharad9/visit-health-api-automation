@@ -5,12 +5,7 @@ import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.*;
 import com.visit.gwtapiflowbuilder.client.AppState;
 import com.visit.gwtapiflowbuilder.client.model.KeyValuePair;
 import com.visit.gwtapiflowbuilder.client.style.BaseStyle;
@@ -192,7 +187,7 @@ public final class FormBuilder {
     }
 
     public void bindUpdate(ListBox listBox) {
-        listBox.addChangeHandler((ChangeHandler) event -> {
+        listBox.addChangeHandler(event -> {
             if (state.onUpdate != null) state.onUpdate.run();
         });
     }

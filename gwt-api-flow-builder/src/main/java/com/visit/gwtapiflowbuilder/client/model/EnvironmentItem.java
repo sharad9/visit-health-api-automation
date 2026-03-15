@@ -1,6 +1,7 @@
 package com.visit.gwtapiflowbuilder.client.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class EnvironmentItem {
@@ -22,9 +23,7 @@ public class EnvironmentItem {
         this.retryCount = retryCount;
         this.retryDelay = retryDelay;
         if (vars != null) {
-            for (KeyValuePair pair : vars) {
-                this.variables.add(pair);
-            }
+            Collections.addAll(this.variables, vars);
         }
     }
 }

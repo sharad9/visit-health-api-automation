@@ -1,17 +1,7 @@
 package com.visit.gwtapiflowbuilder.client.service;
 
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
-import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONBoolean;
-import com.google.gwt.json.client.JSONNumber;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONString;
-import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.http.client.*;
+import com.google.gwt.json.client.*;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.visit.gwtapiflowbuilder.client.AppState;
@@ -37,6 +27,17 @@ public final class StepRunner {
 
     // -------------------------------------------------------------------------
     // Run a single step
+    // -------------------------------------------------------------------------
+
+    public static native String getNativeDateTime() /*-{
+        var d = new Date();
+        var p = function(n) { return n < 10 ? '0' + n : '' + n; };
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+            + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }-*/;
+
+    // -------------------------------------------------------------------------
+    // Variable extraction
     // -------------------------------------------------------------------------
 
     public void runStep(StepBlock block, Button runButton) {
@@ -179,10 +180,6 @@ public final class StepRunner {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Variable extraction
-    // -------------------------------------------------------------------------
-
     public void extractResponseVariables(String stepId, String responseBody, String responseHeaders, StepBlock block) {
         if (stepId == null || stepId.isEmpty()) {
             return;
@@ -283,6 +280,10 @@ public final class StepRunner {
         return current.toString();
     }
 
+    // -------------------------------------------------------------------------
+    // Response formatting
+    // -------------------------------------------------------------------------
+
     public String extractHeaderValue(String headersText, String headerName) {
         if (headersText == null || headersText.isEmpty() || headerName == null) {
             return null;
@@ -299,15 +300,11 @@ public final class StepRunner {
         return null;
     }
 
-    // -------------------------------------------------------------------------
-    // Response formatting
-    // -------------------------------------------------------------------------
-
     public String formatRunResponse(int statusCode, String headers, String body, long durationMs, String executedAt) {
         StringBuilder formattedResponse = new StringBuilder();
         formattedResponse.append("Executed At: ").append(executedAt)
-          .append("  |  Duration: ").append(durationMs).append(" ms")
-          .append("  |  Status: ").append(statusCode).append("\n\n");
+                .append("  |  Duration: ").append(durationMs).append(" ms")
+                .append("  |  Status: ").append(statusCode).append("\n\n");
         formattedResponse.append("Headers:\n");
         if (headers == null || headers.trim().isEmpty()) {
             formattedResponse.append("(none)");
@@ -322,13 +319,6 @@ public final class StepRunner {
         }
         return formattedResponse.toString();
     }
-
-    public static native String getNativeDateTime() /*-{
-        var d = new Date();
-        var p = function(n) { return n < 10 ? '0' + n : '' + n; };
-        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
-            + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
-    }-*/;
 
     // -------------------------------------------------------------------------
     // Private helpers

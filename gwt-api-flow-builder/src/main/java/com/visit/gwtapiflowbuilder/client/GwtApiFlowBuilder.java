@@ -2,13 +2,7 @@ package com.visit.gwtapiflowbuilder.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.MouseDownEvent;
-import com.google.gwt.event.dom.client.MouseDownHandler;
-import com.google.gwt.event.dom.client.MouseMoveEvent;
-import com.google.gwt.event.dom.client.MouseMoveHandler;
-import com.google.gwt.event.dom.client.MouseUpEvent;
-import com.google.gwt.event.dom.client.MouseUpHandler;
+import com.google.gwt.event.dom.client.*;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -20,14 +14,7 @@ import com.visit.gwtapiflowbuilder.client.service.FlowSyncService;
 import com.visit.gwtapiflowbuilder.client.service.StepRunner;
 import com.visit.gwtapiflowbuilder.client.style.BaseStyle;
 import com.visit.gwtapiflowbuilder.client.theme.Theme;
-import com.visit.gwtapiflowbuilder.client.ui.CollectionRunnerView;
-import com.visit.gwtapiflowbuilder.client.ui.EnvironmentSection;
-import com.visit.gwtapiflowbuilder.client.ui.FormBuilder;
-import com.visit.gwtapiflowbuilder.client.ui.NavbarView;
-import com.visit.gwtapiflowbuilder.client.ui.PreviewPanelView;
-import com.visit.gwtapiflowbuilder.client.ui.SectionView;
-import com.visit.gwtapiflowbuilder.client.ui.TokenRenderer;
-import com.visit.gwtapiflowbuilder.client.ui.UiFactory;
+import com.visit.gwtapiflowbuilder.client.ui.*;
 
 /**
  * Entry point — thin coordinator that wires AppState, services, and UI sections together.
@@ -50,7 +37,10 @@ public class GwtApiFlowBuilder implements EntryPoint {
         // Wire callbacks
         state.onUpdate = () -> syncService.updateJson();
         state.onRender = () -> render();
-        state.onFullReset = () -> { resetState(); render(); };
+        state.onFullReset = () -> {
+            resetState();
+            render();
+        };
         state.onLoadComplete = json -> syncService.applyJsonText(json, false);
 
         resetState();
@@ -87,7 +77,7 @@ public class GwtApiFlowBuilder implements EntryPoint {
         StepRunner stepRunner = new StepRunner(state, tokenRenderer);
         EnvironmentSection envSection = new EnvironmentSection(state, formBuilder, tokenRenderer);
         com.visit.gwtapiflowbuilder.client.ui.StepSection stepSection =
-            new com.visit.gwtapiflowbuilder.client.ui.StepSection(state, formBuilder, tokenRenderer, stepRunner);
+                new com.visit.gwtapiflowbuilder.client.ui.StepSection(state, formBuilder, tokenRenderer, stepRunner);
         collectionRunner = new CollectionRunnerView(state);
 
         // Flow select dropdown
@@ -103,10 +93,10 @@ public class GwtApiFlowBuilder implements EntryPoint {
         // Navbar
         state.navbarView = new NavbarView();
         app.add(state.navbarView.build(
-            toggleHandler(), Theme.toggleLabel(),
-            saveHandler(),
-            event -> collectionRunner.runCollection(),
-            state.flowSelect));
+                toggleHandler(), Theme.toggleLabel(),
+                saveHandler(),
+                event -> collectionRunner.runCollection(),
+                state.flowSelect));
 
         // Content row (form | divider | preview)
         state.contentRow = new FlowPanel();

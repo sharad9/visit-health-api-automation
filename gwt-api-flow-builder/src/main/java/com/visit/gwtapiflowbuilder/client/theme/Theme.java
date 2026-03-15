@@ -1,35 +1,10 @@
 package com.visit.gwtapiflowbuilder.client.theme;
 
 public final class Theme {
-    private Theme() {
-    }
-
     public static final String FONT_BASE = "\"Inter\", system-ui, sans-serif";
     public static final String FONT_MONO = "\"Fira Code\",\"Cascadia Code\",\"JetBrains Mono\",monospace";
     public static final String TOGGLE_LABEL_LIGHT = "☀ Light";
     public static final String TOGGLE_LABEL_DARK = "☽ Dark";
-
-    public static boolean IS_DARK = false;
-
-    public static String COLOR_BG = "#F6F7FB";
-    public static String COLOR_PANEL = "#FFFFFF";
-    public static String COLOR_SECTION = "#F9FAFC";
-    public static String COLOR_BORDER = "#E2E6ED";
-    public static String COLOR_TEXT = "#1F2933";
-    public static String COLOR_MUTED = "#6B7280";
-    public static String COLOR_MUTED_DIM = "#9AA5B1";
-    public static String COLOR_PRIMARY = "#FF6C37";
-    public static String COLOR_PRIMARY_LIGHT = "#FFF3EE";
-    public static String COLOR_JSON_BG = "#F7F8FB";
-    public static String COLOR_JSON_TEXT = "#111827";
-    public static String COLOR_STATUS_BG = "#E8F5EC";
-    public static String COLOR_STATUS_TEXT = "#157347";
-    public static String COLOR_STATUS_ERROR_BG = "#FDECEC";
-    public static String COLOR_STATUS_ERROR_TEXT = "#B91C1C";
-    public static String COLOR_DANGER = "#E44D3A";
-    public static String COLOR_TEMPLATE = "#2563EB";
-    public static String GRADIENT_HEADER = "linear-gradient(135deg,#FF6C37,#FF8F5B)";
-
     public static final String FONT_SIZE_68 = "10px";
     public static final String FONT_SIZE_72 = "10.5px";
     public static final String FONT_SIZE_78 = "11px";
@@ -37,18 +12,14 @@ public final class Theme {
     public static final String FONT_SIZE_87 = "12px";
     public static final String FONT_SIZE_95 = "13px";
     public static final String FONT_SIZE_140 = "18px";
-
     public static final String FONT_WEIGHT_500 = "500";
     public static final String FONT_WEIGHT_600 = "600";
     public static final String FONT_WEIGHT_700 = "700";
-
     public static final String LETTER_SPACING_TIGHT = "-0.2px";
     public static final String LETTER_SPACING_WIDE = "0.8px";
-
     public static final String GAP_6 = "6px";
     public static final String GAP_8 = "8px";
     public static final String GAP_10 = "10px";
-
     public static final String PAD_SECTION_HDR = "8px 10px";
     public static final String PAD_SECTION_BODY = "10px";
     public static final String PAD_FORM_INNER = "10px";
@@ -56,9 +27,7 @@ public final class Theme {
     public static final String PAD_NAVBAR = "0 14px";
     public static final String PAD_PREVIEW_HDR = "8px 12px";
     public static final String PAD_JSON = "12px";
-
     public static final String HEIGHT_NAVBAR = "54px";
-
     private static final Palette LIGHT = new Palette(
             "#F6F7FB",
             "#FFFFFF",
@@ -79,7 +48,6 @@ public final class Theme {
             "#2563EB",
             "linear-gradient(135deg,#FF6C37,#FF8F5B)"
     );
-
     private static final Palette DARK = new Palette(
             "#1B1C20",
             "#1F2127",
@@ -100,6 +68,28 @@ public final class Theme {
             "#60A5FA",
             "linear-gradient(135deg,#FF6C37,#FF8F5B)"
     );
+    public static boolean IS_DARK = false;
+    public static String COLOR_BG = "#F6F7FB";
+    public static String COLOR_PANEL = "#FFFFFF";
+    public static String COLOR_SECTION = "#F9FAFC";
+    public static String COLOR_BORDER = "#E2E6ED";
+    public static String COLOR_TEXT = "#1F2933";
+    public static String COLOR_MUTED = "#6B7280";
+    public static String COLOR_MUTED_DIM = "#9AA5B1";
+    public static String COLOR_PRIMARY = "#FF6C37";
+    public static String COLOR_PRIMARY_LIGHT = "#FFF3EE";
+    public static String COLOR_JSON_BG = "#F7F8FB";
+    public static String COLOR_JSON_TEXT = "#111827";
+    public static String COLOR_STATUS_BG = "#E8F5EC";
+    public static String COLOR_STATUS_TEXT = "#157347";
+    public static String COLOR_STATUS_ERROR_BG = "#FDECEC";
+    public static String COLOR_STATUS_ERROR_TEXT = "#B91C1C";
+    public static String COLOR_DANGER = "#E44D3A";
+    public static String COLOR_TEMPLATE = "#2563EB";
+    public static String GRADIENT_HEADER = "linear-gradient(135deg,#FF6C37,#FF8F5B)";
+
+    private Theme() {
+    }
 
     public static void setMode(boolean dark) {
         IS_DARK = dark;

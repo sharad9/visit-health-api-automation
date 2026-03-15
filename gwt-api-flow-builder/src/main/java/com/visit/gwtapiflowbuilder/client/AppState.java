@@ -2,11 +2,7 @@ package com.visit.gwtapiflowbuilder.client;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.*;
 import com.visit.gwtapiflowbuilder.client.model.EnvironmentItem;
 import com.visit.gwtapiflowbuilder.client.model.KeyValuePair;
 import com.visit.gwtapiflowbuilder.client.model.StepData;
@@ -111,15 +107,23 @@ public final class AppState {
     // Callbacks set by the coordinator
     // -------------------------------------------------------------------------
 
-    /** Called by any component when data changes → triggers FlowSyncService.updateJson() */
+    /**
+     * Called by any component when data changes → triggers FlowSyncService.updateJson()
+     */
     public Runnable onUpdate;
 
-    /** Called by FlowSyncService when full re-render is needed (e.g. after JSON parse) */
+    /**
+     * Called by FlowSyncService when full re-render is needed (e.g. after JSON parse)
+     */
     public Runnable onRender;
 
-    /** Called by FlowSyncService when parse fails on a server-loaded flow — resets and re-renders */
+    /**
+     * Called by FlowSyncService when parse fails on a server-loaded flow — resets and re-renders
+     */
     public Runnable onFullReset;
 
-    /** Called by FlowPersistenceService when a flow is loaded from the server */
+    /**
+     * Called by FlowPersistenceService when a flow is loaded from the server
+     */
     public StringConsumer onLoadComplete;
 }

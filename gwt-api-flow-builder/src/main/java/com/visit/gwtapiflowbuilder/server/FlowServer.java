@@ -1,10 +1,6 @@
 package com.visit.gwtapiflowbuilder.server;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -39,6 +35,82 @@ public final class FlowServer {
         server.setExecutor(null);
         System.out.println("Serving on http://localhost:" + PORT);
         server.start();
+    }
+
+    private static Path resolveStaticDir() {
+        Path project = Paths.get("").toAbsolutePath();
+        Path built = project.resolve("target/gwt-api-flow-builder-1.0.0");
+        if (Files.exists(built)) {
+            return built;
+        }
+        Path webapp = project.resolve("src/main/webapp");
+        if (Files.exists(webapp)) {
+            return webapp;
+        }
+        return project;
+    }
+
+    private static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
+        byte[] data = json.getBytes(StandardCharsets.UTF_8);
+        Headers headers = exchange.getResponseHeaders();
+        headers.set("Content-Type", "application/json; charset=utf-8");
+        headers.set("Content-Length", String.valueOf(data.length));
+        exchange.sendResponseHeaders(status, data.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(data);
+        }
+    }
+
+    private static String readBody(InputStream stream) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[4096];
+        int read;
+        while ((read = stream.read(buf)) != -1) {
+            out.write(buf, 0, read);
+        }
+        return out.toString(StandardCharsets.UTF_8);
+    }
+
+    private static void addCors(HttpExchange exchange) {
+        Headers headers = exchange.getResponseHeaders();
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    }
+
+    private static String formatHeaders(java.util.Map<String, java.util.List<String>> headers) {
+        if (headers == null || headers.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (java.util.Map.Entry<String, java.util.List<String>> entry : headers.entrySet()) {
+            String key = entry.getKey();
+            if (key == null) {
+                continue;
+            }
+            java.util.List<String> values = entry.getValue();
+            if (values == null || values.isEmpty()) {
+                sb.append(key).append(": ").append("\n");
+            } else {
+                for (String value : values) {
+                    sb.append(key).append(": ").append(value).append("\n");
+                }
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    private static String guessContentType(Path filePath) {
+        String name = filePath.getFileName().toString().toLowerCase();
+        if (name.endsWith(".html")) return "text/html; charset=utf-8";
+        if (name.endsWith(".js")) return "application/javascript; charset=utf-8";
+        if (name.endsWith(".css")) return "text/css; charset=utf-8";
+        if (name.endsWith(".json")) return "application/json; charset=utf-8";
+        if (name.endsWith(".svg")) return "image/svg+xml";
+        if (name.endsWith(".png")) return "image/png";
+        if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
+        if (name.endsWith(".ico")) return "image/x-icon";
+        return "application/octet-stream";
     }
 
     static class StaticHandler implements HttpHandler {
@@ -192,8 +264,8 @@ public final class FlowServer {
 
             String name = entry.get("name").getAsString();
             JsonObject match = null;
-            for (int i = 0; i < arr.size(); i++) {
-                JsonObject obj = arr.get(i).getAsJsonObject();
+            for (JsonElement element : arr) {
+                JsonObject obj = element.getAsJsonObject();
                 if (name.equals(obj.get("name").getAsString())) {
                     match = obj;
                     break;
@@ -310,82 +382,6 @@ public final class FlowServer {
         }
     }
 
-    private static Path resolveStaticDir() {
-        Path project = Paths.get("").toAbsolutePath();
-        Path built = project.resolve("target/gwt-api-flow-builder-1.0.0");
-        if (Files.exists(built)) {
-            return built;
-        }
-        Path webapp = project.resolve("src/main/webapp");
-        if (Files.exists(webapp)) {
-            return webapp;
-        }
-        return project;
-    }
-
-    private static void sendJson(HttpExchange exchange, int status, String json) throws IOException {
-        byte[] data = json.getBytes(StandardCharsets.UTF_8);
-        Headers headers = exchange.getResponseHeaders();
-        headers.set("Content-Type", "application/json; charset=utf-8");
-        headers.set("Content-Length", String.valueOf(data.length));
-        exchange.sendResponseHeaders(status, data.length);
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(data);
-        }
-    }
-
-    private static String readBody(InputStream stream) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[4096];
-        int read;
-        while ((read = stream.read(buf)) != -1) {
-            out.write(buf, 0, read);
-        }
-        return out.toString(StandardCharsets.UTF_8);
-    }
-
-    private static void addCors(HttpExchange exchange) {
-        Headers headers = exchange.getResponseHeaders();
-        headers.set("Access-Control-Allow-Origin", "*");
-        headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    }
-
-    private static String formatHeaders(java.util.Map<String, java.util.List<String>> headers) {
-        if (headers == null || headers.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (java.util.Map.Entry<String, java.util.List<String>> entry : headers.entrySet()) {
-            String key = entry.getKey();
-            if (key == null) {
-                continue;
-            }
-            java.util.List<String> values = entry.getValue();
-            if (values == null || values.isEmpty()) {
-                sb.append(key).append(": ").append("\n");
-            } else {
-                for (String value : values) {
-                    sb.append(key).append(": ").append(value).append("\n");
-                }
-            }
-        }
-        return sb.toString().trim();
-    }
-
-    private static String guessContentType(Path filePath) {
-        String name = filePath.getFileName().toString().toLowerCase();
-        if (name.endsWith(".html")) return "text/html; charset=utf-8";
-        if (name.endsWith(".js")) return "application/javascript; charset=utf-8";
-        if (name.endsWith(".css")) return "text/css; charset=utf-8";
-        if (name.endsWith(".json")) return "application/json; charset=utf-8";
-        if (name.endsWith(".svg")) return "image/svg+xml";
-        if (name.endsWith(".png")) return "image/png";
-        if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg";
-        if (name.endsWith(".ico")) return "image/x-icon";
-        return "application/octet-stream";
-    }
-
     // -------------------------------------------------------------------------
     // Flow Run Handler  —  GET /api/flows/run?name=<flowName>
     // -------------------------------------------------------------------------
@@ -393,6 +389,178 @@ public final class FlowServer {
     static class FlowRunHandler implements HttpHandler {
         private static final String FLOW_DIR = "flows";
         private static final Gson PRETTY = new GsonBuilder().setPrettyPrinting().create();
+
+        private static JsonArray buildStepsSummaryJson(java.util.List<FlowRunner.StepResult> steps) {
+            JsonArray arr = new JsonArray();
+            for (FlowRunner.StepResult s : steps) {
+                JsonObject o = new JsonObject();
+                o.addProperty("stepIdentifier", s.stepIdentifier);
+                o.addProperty("method", s.method);
+                o.addProperty("url", s.resolvedUrl);
+                o.addProperty("statusCode", s.statusCode);
+                o.addProperty("durationMs", s.durationMs);
+                o.addProperty("passed", s.passed);
+                if (s.errorMessage != null) o.addProperty("error", s.errorMessage);
+                arr.add(o);
+            }
+            return arr;
+        }
+
+        private static String buildHtmlReport(FlowRunner.RunReport report) {
+            String overallStatus = report.failedSteps == 0 ? "PASS" : "FAIL";
+            String statusColor = report.failedSteps == 0 ? "#16a34a" : "#dc2626";
+            String statusBg = report.failedSteps == 0 ? "#dcfce7" : "#fee2e2";
+
+            StringBuilder stepsHtml = new StringBuilder();
+            int idx = 1;
+            for (FlowRunner.StepResult s : report.steps) {
+                String sc = s.passed ? "#16a34a" : "#dc2626";
+                String sbg = s.passed ? "#dcfce7" : "#fee2e2";
+                String pill = "<span style=\"background:" + sbg + ";color:" + sc
+                        + ";padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;\">"
+                        + (s.passed ? "PASS" : "FAIL") + "</span>";
+
+                StringBuilder checksHtml = new StringBuilder();
+                for (FlowRunner.CheckResult c : s.checks) {
+                    String cc = c.passed ? "#16a34a" : "#dc2626";
+                    checksHtml.append("<span style=\"color:").append(cc)
+                            .append(";font-size:11px;\">").append(c.passed ? "✓" : "✗")
+                            .append(" [").append(c.source).append("] ")
+                            .append(escHtml(c.detail)).append("</span><br>");
+                }
+                if (s.errorMessage != null) {
+                    checksHtml.append("<span style=\"color:#dc2626;font-size:11px;\">✗ Error: ")
+                            .append(escHtml(s.errorMessage)).append("</span>");
+                }
+
+                StringBuilder extractedHtml = new StringBuilder();
+                for (java.util.Map.Entry<String, String> e : s.extractedVariables.entrySet()) {
+                    extractedHtml.append("<code style=\"font-size:11px;color:#7c3aed;\">")
+                            .append(escHtml(e.getKey())).append("</code>")
+                            .append(" = <code style=\"font-size:11px;\">")
+                            .append(escHtml(truncate(e.getValue(), 80))).append("</code><br>");
+                }
+
+                stepsHtml.append("<details style=\"border:1px solid #e2e8f0;border-radius:10px;"
+                                + "margin-bottom:10px;overflow:hidden;\">\n")
+                        .append("<summary style=\"padding:12px 16px;cursor:pointer;background:#f8fafc;"
+                                + "display:flex;align-items:center;gap:10px;list-style:none;"
+                                + "user-select:none;\">\n")
+                        .append("<span style=\"color:#64748b;font-size:12px;min-width:24px;\">").append(idx).append("</span>")
+                        .append(pill)
+                        .append("<span style=\"font-weight:600;flex:1;font-size:13px;\">").append(escHtml(s.stepIdentifier)).append("</span>")
+                        .append("<span style=\"font-size:12px;color:#64748b;font-family:monospace;\">")
+                        .append(s.method).append(" ").append(escHtml(truncate(s.resolvedUrl, 60))).append("</span>")
+                        .append("<span style=\"font-size:11px;color:#94a3b8;margin-left:12px;\">").append(s.durationMs).append(" ms</span>")
+                        .append("</summary>\n")
+                        .append("<div style=\"padding:16px;background:#fff;display:grid;gap:12px;\">\n");
+
+                stepsHtml.append(section("URL",
+                        "<code style=\"word-break:break-all;font-size:12px;\">" + escHtml(s.resolvedUrl) + "</code>"));
+                stepsHtml.append(section("Request Headers", formatMapHtml(s.requestHeaders)));
+                if (s.requestBody != null && !s.requestBody.isBlank()) {
+                    stepsHtml.append(section("Request Body",
+                            "<pre style=\"margin:0;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;\">"
+                                    + escHtml(s.requestBody) + "</pre>"));
+                }
+                stepsHtml.append(section("Status",
+                        "<code style=\"font-size:13px;font-weight:700;color:" + sc + ";\">"
+                                + s.statusCode + "</code>"));
+                if (!s.responseHeaders.isBlank()) {
+                    stepsHtml.append(section("Response Headers",
+                            "<pre style=\"margin:0;font-size:11px;overflow-x:auto;\">"
+                                    + escHtml(s.responseHeaders) + "</pre>"));
+                }
+                if (s.responseBody != null && !s.responseBody.isBlank()) {
+                    stepsHtml.append(section("Response Body",
+                            "<pre style=\"margin:0;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;\">"
+                                    + escHtml(truncate(s.responseBody, 4000)) + "</pre>"));
+                }
+                if (checksHtml.length() > 0) {
+                    stepsHtml.append(section("Checks", checksHtml.toString()));
+                }
+                if (extractedHtml.length() > 0) {
+                    stepsHtml.append(section("Extracted Variables", extractedHtml.toString()));
+                }
+
+                stepsHtml.append("</div></details>\n");
+                idx++;
+            }
+
+            return "<!DOCTYPE html><html lang=\"en\"><head>"
+                    + "<meta charset=\"UTF-8\">"
+                    + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                    + "<title>Run Report — " + escHtml(report.flowName) + "</title>"
+                    + "<style>*{box-sizing:border-box}"
+                    + "body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"
+                    + "background:#f1f5f9;color:#0f172a}"
+                    + "details>summary::-webkit-details-marker{display:none}"
+                    + "details[open]>summary{background:#f0f9ff;border-bottom:1px solid #e2e8f0}"
+                    + "</style></head><body>\n"
+                    + "<div style=\"background:#0f172a;color:#f8fafc;padding:18px 32px;"
+                    + "position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;\">\n"
+                    + "<span style=\"font-size:17px;font-weight:700;\">▣ API Flow Run Report</span>\n"
+                    + "<span style=\"background:" + statusBg + ";color:" + statusColor
+                    + ";padding:3px 14px;border-radius:99px;font-weight:700;font-size:12px;\">"
+                    + overallStatus + "</span>\n"
+                    + "<span style=\"color:#94a3b8;font-size:12px;margin-left:auto;\">"
+                    + escHtml(report.flowName) + " &nbsp;·&nbsp; " + report.executedAt + "</span>\n"
+                    + "</div>\n"
+                    + "<div style=\"max-width:960px;margin:28px auto;padding:0 16px;\">\n"
+                    + "<div style=\"display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;\">\n"
+                    + statCard("Total Steps", String.valueOf(report.totalSteps), "#2563eb", "#eff6ff")
+                    + statCard("Passed", String.valueOf(report.passedSteps), "#16a34a", "#dcfce7")
+                    + statCard("Failed", String.valueOf(report.failedSteps),
+                    report.failedSteps > 0 ? "#dc2626" : "#16a34a",
+                    report.failedSteps > 0 ? "#fee2e2" : "#dcfce7")
+                    + statCard("Duration", report.totalDurationMs + " ms", "#7c3aed", "#f5f3ff")
+                    + "</div>\n"
+                    + stepsHtml
+                    + "</div>\n</body></html>";
+        }
+
+        private static String section(String title, String content) {
+            return "<div>\n<div style=\"font-size:10px;font-weight:700;color:#64748b;"
+                    + "text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;\">"
+                    + title + "</div>\n"
+                    + "<div style=\"background:#f8fafc;border:1px solid #e2e8f0;"
+                    + "border-radius:6px;padding:8px 10px;\">"
+                    + content + "</div>\n</div>\n";
+        }
+
+        private static String statCard(String label, String value, String color, String bg) {
+            return "<div style=\"background:" + bg + ";border:1px solid " + color + "33;"
+                    + "border-radius:10px;padding:14px;text-align:center;\">\n"
+                    + "<div style=\"font-size:22px;font-weight:700;color:" + color + ";\">"
+                    + value + "</div>\n"
+                    + "<div style=\"font-size:11px;color:" + color + ";opacity:.75;margin-top:2px;\">"
+                    + label + "</div>\n</div>\n";
+        }
+
+        private static String formatMapHtml(java.util.Map<String, String> map) {
+            if (map == null || map.isEmpty()) {
+                return "<span style=\"color:#94a3b8;font-size:12px;\">—</span>";
+            }
+            StringBuilder sb = new StringBuilder();
+            for (java.util.Map.Entry<String, String> e : map.entrySet()) {
+                sb.append("<code style=\"font-size:11px;color:#0369a1;\">")
+                        .append(escHtml(e.getKey())).append("</code>: ")
+                        .append("<code style=\"font-size:11px;\">").append(escHtml(e.getValue()))
+                        .append("</code><br>");
+            }
+            return sb.toString();
+        }
+
+        private static String escHtml(String s) {
+            if (s == null) return "";
+            return s.replace("&", "&amp;").replace("<", "&lt;")
+                    .replace(">", "&gt;").replace("\"", "&quot;");
+        }
+
+        private static String truncate(String s, int max) {
+            if (s == null) return "";
+            return s.length() <= max ? s : s.substring(0, max) + "…";
+        }
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -425,7 +593,7 @@ public final class FlowServer {
             JsonObject flow;
             try {
                 flow = JsonParser.parseString(
-                    Files.readString(flowFile, StandardCharsets.UTF_8)).getAsJsonObject();
+                        Files.readString(flowFile, StandardCharsets.UTF_8)).getAsJsonObject();
             } catch (Exception ex) {
                 JsonObject err = new JsonObject();
                 err.addProperty("error", "Invalid flow JSON: " + ex.getMessage());
@@ -441,7 +609,7 @@ public final class FlowServer {
             try {
                 Files.createDirectories(siteDir);
                 Files.writeString(siteDir.resolve(reportFileName),
-                    buildHtmlReport(report), StandardCharsets.UTF_8);
+                        buildHtmlReport(report), StandardCharsets.UTF_8);
             } catch (Exception ex) {
                 System.err.println("Warning: could not write HTML report: " + ex.getMessage());
             }
@@ -457,178 +625,6 @@ public final class FlowServer {
             out.addProperty("reportUrl", "/" + reportFileName);
             out.add("steps", buildStepsSummaryJson(report.steps));
             sendJson(exchange, 200, PRETTY.toJson(out));
-        }
-
-        private static JsonArray buildStepsSummaryJson(java.util.List<FlowRunner.StepResult> steps) {
-            JsonArray arr = new JsonArray();
-            for (FlowRunner.StepResult s : steps) {
-                JsonObject o = new JsonObject();
-                o.addProperty("stepIdentifier", s.stepIdentifier);
-                o.addProperty("method", s.method);
-                o.addProperty("url", s.resolvedUrl);
-                o.addProperty("statusCode", s.statusCode);
-                o.addProperty("durationMs", s.durationMs);
-                o.addProperty("passed", s.passed);
-                if (s.errorMessage != null) o.addProperty("error", s.errorMessage);
-                arr.add(o);
-            }
-            return arr;
-        }
-
-        private static String buildHtmlReport(FlowRunner.RunReport report) {
-            String overallStatus = report.failedSteps == 0 ? "PASS" : "FAIL";
-            String statusColor   = report.failedSteps == 0 ? "#16a34a" : "#dc2626";
-            String statusBg      = report.failedSteps == 0 ? "#dcfce7" : "#fee2e2";
-
-            StringBuilder stepsHtml = new StringBuilder();
-            int idx = 1;
-            for (FlowRunner.StepResult s : report.steps) {
-                String sc  = s.passed ? "#16a34a" : "#dc2626";
-                String sbg = s.passed ? "#dcfce7" : "#fee2e2";
-                String pill = "<span style=\"background:" + sbg + ";color:" + sc
-                    + ";padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;\">"
-                    + (s.passed ? "PASS" : "FAIL") + "</span>";
-
-                StringBuilder checksHtml = new StringBuilder();
-                for (FlowRunner.CheckResult c : s.checks) {
-                    String cc = c.passed ? "#16a34a" : "#dc2626";
-                    checksHtml.append("<span style=\"color:").append(cc)
-                        .append(";font-size:11px;\">").append(c.passed ? "✓" : "✗")
-                        .append(" [").append(c.source).append("] ")
-                        .append(escHtml(c.detail)).append("</span><br>");
-                }
-                if (s.errorMessage != null) {
-                    checksHtml.append("<span style=\"color:#dc2626;font-size:11px;\">✗ Error: ")
-                        .append(escHtml(s.errorMessage)).append("</span>");
-                }
-
-                StringBuilder extractedHtml = new StringBuilder();
-                for (java.util.Map.Entry<String, String> e : s.extractedVariables.entrySet()) {
-                    extractedHtml.append("<code style=\"font-size:11px;color:#7c3aed;\">")
-                        .append(escHtml(e.getKey())).append("</code>")
-                        .append(" = <code style=\"font-size:11px;\">")
-                        .append(escHtml(truncate(e.getValue(), 80))).append("</code><br>");
-                }
-
-                stepsHtml.append("<details style=\"border:1px solid #e2e8f0;border-radius:10px;"
-                    + "margin-bottom:10px;overflow:hidden;\">\n")
-                    .append("<summary style=\"padding:12px 16px;cursor:pointer;background:#f8fafc;"
-                        + "display:flex;align-items:center;gap:10px;list-style:none;"
-                        + "user-select:none;\">\n")
-                    .append("<span style=\"color:#64748b;font-size:12px;min-width:24px;\">").append(idx).append("</span>")
-                    .append(pill)
-                    .append("<span style=\"font-weight:600;flex:1;font-size:13px;\">").append(escHtml(s.stepIdentifier)).append("</span>")
-                    .append("<span style=\"font-size:12px;color:#64748b;font-family:monospace;\">")
-                        .append(s.method).append(" ").append(escHtml(truncate(s.resolvedUrl, 60))).append("</span>")
-                    .append("<span style=\"font-size:11px;color:#94a3b8;margin-left:12px;\">").append(s.durationMs).append(" ms</span>")
-                    .append("</summary>\n")
-                    .append("<div style=\"padding:16px;background:#fff;display:grid;gap:12px;\">\n");
-
-                stepsHtml.append(section("URL",
-                    "<code style=\"word-break:break-all;font-size:12px;\">" + escHtml(s.resolvedUrl) + "</code>"));
-                stepsHtml.append(section("Request Headers", formatMapHtml(s.requestHeaders)));
-                if (s.requestBody != null && !s.requestBody.isBlank()) {
-                    stepsHtml.append(section("Request Body",
-                        "<pre style=\"margin:0;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;\">"
-                        + escHtml(s.requestBody) + "</pre>"));
-                }
-                stepsHtml.append(section("Status",
-                    "<code style=\"font-size:13px;font-weight:700;color:" + sc + ";\">"
-                    + s.statusCode + "</code>"));
-                if (!s.responseHeaders.isBlank()) {
-                    stepsHtml.append(section("Response Headers",
-                        "<pre style=\"margin:0;font-size:11px;overflow-x:auto;\">"
-                        + escHtml(s.responseHeaders) + "</pre>"));
-                }
-                if (s.responseBody != null && !s.responseBody.isBlank()) {
-                    stepsHtml.append(section("Response Body",
-                        "<pre style=\"margin:0;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;\">"
-                        + escHtml(truncate(s.responseBody, 4000)) + "</pre>"));
-                }
-                if (checksHtml.length() > 0) {
-                    stepsHtml.append(section("Checks", checksHtml.toString()));
-                }
-                if (extractedHtml.length() > 0) {
-                    stepsHtml.append(section("Extracted Variables", extractedHtml.toString()));
-                }
-
-                stepsHtml.append("</div></details>\n");
-                idx++;
-            }
-
-            return "<!DOCTYPE html><html lang=\"en\"><head>"
-                + "<meta charset=\"UTF-8\">"
-                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-                + "<title>Run Report — " + escHtml(report.flowName) + "</title>"
-                + "<style>*{box-sizing:border-box}"
-                + "body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"
-                + "background:#f1f5f9;color:#0f172a}"
-                + "details>summary::-webkit-details-marker{display:none}"
-                + "details[open]>summary{background:#f0f9ff;border-bottom:1px solid #e2e8f0}"
-                + "</style></head><body>\n"
-                + "<div style=\"background:#0f172a;color:#f8fafc;padding:18px 32px;"
-                + "position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;\">\n"
-                + "<span style=\"font-size:17px;font-weight:700;\">▣ API Flow Run Report</span>\n"
-                + "<span style=\"background:" + statusBg + ";color:" + statusColor
-                + ";padding:3px 14px;border-radius:99px;font-weight:700;font-size:12px;\">"
-                + overallStatus + "</span>\n"
-                + "<span style=\"color:#94a3b8;font-size:12px;margin-left:auto;\">"
-                + escHtml(report.flowName) + " &nbsp;·&nbsp; " + report.executedAt + "</span>\n"
-                + "</div>\n"
-                + "<div style=\"max-width:960px;margin:28px auto;padding:0 16px;\">\n"
-                + "<div style=\"display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;\">\n"
-                + statCard("Total Steps", String.valueOf(report.totalSteps), "#2563eb", "#eff6ff")
-                + statCard("Passed", String.valueOf(report.passedSteps), "#16a34a", "#dcfce7")
-                + statCard("Failed", String.valueOf(report.failedSteps),
-                    report.failedSteps > 0 ? "#dc2626" : "#16a34a",
-                    report.failedSteps > 0 ? "#fee2e2" : "#dcfce7")
-                + statCard("Duration", report.totalDurationMs + " ms", "#7c3aed", "#f5f3ff")
-                + "</div>\n"
-                + stepsHtml
-                + "</div>\n</body></html>";
-        }
-
-        private static String section(String title, String content) {
-            return "<div>\n<div style=\"font-size:10px;font-weight:700;color:#64748b;"
-                + "text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;\">"
-                + title + "</div>\n"
-                + "<div style=\"background:#f8fafc;border:1px solid #e2e8f0;"
-                + "border-radius:6px;padding:8px 10px;\">"
-                + content + "</div>\n</div>\n";
-        }
-
-        private static String statCard(String label, String value, String color, String bg) {
-            return "<div style=\"background:" + bg + ";border:1px solid " + color + "33;"
-                + "border-radius:10px;padding:14px;text-align:center;\">\n"
-                + "<div style=\"font-size:22px;font-weight:700;color:" + color + ";\">"
-                + value + "</div>\n"
-                + "<div style=\"font-size:11px;color:" + color + ";opacity:.75;margin-top:2px;\">"
-                + label + "</div>\n</div>\n";
-        }
-
-        private static String formatMapHtml(java.util.Map<String, String> map) {
-            if (map == null || map.isEmpty()) {
-                return "<span style=\"color:#94a3b8;font-size:12px;\">—</span>";
-            }
-            StringBuilder sb = new StringBuilder();
-            for (java.util.Map.Entry<String, String> e : map.entrySet()) {
-                sb.append("<code style=\"font-size:11px;color:#0369a1;\">")
-                  .append(escHtml(e.getKey())).append("</code>: ")
-                  .append("<code style=\"font-size:11px;\">").append(escHtml(e.getValue()))
-                  .append("</code><br>");
-            }
-            return sb.toString();
-        }
-
-        private static String escHtml(String s) {
-            if (s == null) return "";
-            return s.replace("&", "&amp;").replace("<", "&lt;")
-                    .replace(">", "&gt;").replace("\"", "&quot;");
-        }
-
-        private static String truncate(String s, int max) {
-            if (s == null) return "";
-            return s.length() <= max ? s : s.substring(0, max) + "…";
         }
     }
 }

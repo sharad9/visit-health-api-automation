@@ -59,7 +59,7 @@ public final class EnvironmentSection {
         state.envNamePreview = tokenRenderer.tokenPreview(state.envNameBox);
         FlowPanel nameInputRow = formBuilder.row("1fr auto");
         nameInputRow.add(tokenRenderer.previewToggle(state.envNameBox, state.envNamePreview,
-                () -> commitEnvironmentName()));
+                this::commitEnvironmentName));
         nameInputRow.add(removeEnvironmentButton);
         environmentNameSection.add(nameHeaderContainer);
         environmentNameSection.add(nameInputRow);
@@ -95,7 +95,7 @@ public final class EnvironmentSection {
         body.add(environmentConfigRow);
         body.add(environmentVariablesSection);
 
-        state.envSelect.addChangeHandler((ChangeHandler) event -> {
+        state.envSelect.addChangeHandler(event -> {
             syncActiveEnvironmentFromUi();
             state.activeEnvIndex = state.envSelect.getSelectedIndex();
             loadEnvironmentIntoUi(state.environments.get(state.activeEnvIndex));
@@ -187,7 +187,7 @@ public final class EnvironmentSection {
         state.envVarsList.clear();
         if (env.variables.isEmpty()) {
             formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows,
-                "BASE_URL", env.baseUrl == null ? "" : env.baseUrl, "KEY", "VALUE");
+                    "BASE_URL", env.baseUrl == null ? "" : env.baseUrl, "KEY", "VALUE");
             formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows, "", "", "KEY", "VALUE");
         } else {
             boolean hasBaseUrl = false;
@@ -196,11 +196,11 @@ public final class EnvironmentSection {
                     hasBaseUrl = true;
                 }
                 formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows,
-                    pair.key, pair.value, "KEY", "VALUE");
+                        pair.key, pair.value, "KEY", "VALUE");
             }
             if (!hasBaseUrl) {
                 formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows,
-                    "BASE_URL", env.baseUrl == null ? "" : env.baseUrl, "KEY", "VALUE");
+                        "BASE_URL", env.baseUrl == null ? "" : env.baseUrl, "KEY", "VALUE");
             }
         }
     }

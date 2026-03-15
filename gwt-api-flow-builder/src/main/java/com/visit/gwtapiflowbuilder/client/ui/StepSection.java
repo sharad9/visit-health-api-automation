@@ -1,17 +1,7 @@
 package com.visit.gwtapiflowbuilder.client.ui;
 
-import com.google.gwt.event.dom.client.BlurEvent;
-import com.google.gwt.event.dom.client.BlurHandler;
-import com.google.gwt.event.dom.client.DoubleClickEvent;
-import com.google.gwt.event.dom.client.DoubleClickHandler;
-import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.dom.client.KeyDownHandler;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.event.dom.client.*;
+import com.google.gwt.user.client.ui.*;
 import com.visit.gwtapiflowbuilder.client.AppState;
 import com.visit.gwtapiflowbuilder.client.model.CheckData;
 import com.visit.gwtapiflowbuilder.client.model.StepData;
@@ -128,9 +118,9 @@ public final class StepSection {
         toggleStepButton.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
         toggleStepButton.addClickHandler(event -> {
             boolean isOpen = !BaseStyle.Value.NONE.equals(
-                stepBody.getElement().getStyle().getProperty(BaseStyle.Key.DISPLAY));
+                    stepBody.getElement().getStyle().getProperty(BaseStyle.Key.DISPLAY));
             stepBody.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY,
-                isOpen ? BaseStyle.Value.NONE : BaseStyle.Value.GRID);
+                    isOpen ? BaseStyle.Value.NONE : BaseStyle.Value.GRID);
             toggleStepButton.setText(isOpen ? "Open" : "Close");
         });
 

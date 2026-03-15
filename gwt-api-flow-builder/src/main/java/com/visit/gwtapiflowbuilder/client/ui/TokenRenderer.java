@@ -3,24 +3,12 @@ package com.visit.gwtapiflowbuilder.client.ui;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.dom.client.BlurEvent;
-import com.google.gwt.event.dom.client.BlurHandler;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.DoubleClickEvent;
-import com.google.gwt.event.dom.client.DoubleClickHandler;
-import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.dom.client.KeyDownHandler;
-import com.google.gwt.event.dom.client.MouseOutEvent;
-import com.google.gwt.event.dom.client.MouseOutHandler;
-import com.google.gwt.event.dom.client.MouseOverEvent;
-import com.google.gwt.event.dom.client.MouseOverHandler;
+import com.google.gwt.event.dom.client.*;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.visit.gwtapiflowbuilder.client.AppState;
-import com.visit.gwtapiflowbuilder.client.model.KeyValuePair;
 import com.visit.gwtapiflowbuilder.client.style.BaseStyle;
 import com.visit.gwtapiflowbuilder.client.theme.Theme;
 
@@ -127,7 +115,7 @@ public final class TokenRenderer {
                 resolvedText.append(text.substring(parseIndex));
                 break;
             }
-            resolvedText.append(text.substring(parseIndex, start));
+            resolvedText.append(text, parseIndex, start);
             String token = text.substring(start, end + 2);
             resolvedText.append(resolveTokenValue(token));
             parseIndex = end + 2;

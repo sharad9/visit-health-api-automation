@@ -1,13 +1,6 @@
 package com.visit.gwtapiflowbuilder.client.service;
 
-import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONBoolean;
-import com.google.gwt.json.client.JSONNull;
-import com.google.gwt.json.client.JSONNumber;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONString;
-import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.json.client.*;
 import com.google.gwt.user.client.ui.ListBox;
 import com.visit.gwtapiflowbuilder.client.model.EnvironmentItem;
 import com.visit.gwtapiflowbuilder.client.model.KeyValuePair;
@@ -49,8 +42,8 @@ public final class FlowJsonBuilder {
         JSONObject environmentsJson = new JSONObject();
         environmentsJson.put("activeEnvironmentId", jsonString(activeEnvironment.id));
         JSONArray environmentItemsArray = new JSONArray();
-        for (int i = 0; i < environments.size(); i++) {
-            EnvironmentItem env = environments.get(i);
+        int envIndex = 0;
+        for (EnvironmentItem env : environments) {
             JSONObject envJson = new JSONObject();
             envJson.put("environmentId", jsonString(env.id));
             envJson.put("environmentName", jsonString(env.name));
@@ -62,7 +55,7 @@ public final class FlowJsonBuilder {
             if (environmentVariablesObject.size() > 0) {
                 envJson.put("environmentVariables", environmentVariablesObject);
             }
-            environmentItemsArray.set(i, envJson);
+            environmentItemsArray.set(envIndex++, envJson);
         }
         environmentsJson.put("environmentItems", environmentItemsArray);
         root.put("environments", environmentsJson);
@@ -73,8 +66,8 @@ public final class FlowJsonBuilder {
         }
 
         JSONArray stepsJsonArray = new JSONArray();
-        for (int i = 0; i < steps.size(); i++) {
-            StepBlock step = steps.get(i);
+        int stepIndex = 0;
+        for (StepBlock step : steps) {
             JSONObject stepJson = new JSONObject();
             stepJson.put("stepIdentifier", jsonString(step.stepId.getValue()));
 
@@ -123,7 +116,7 @@ public final class FlowJsonBuilder {
                 stepJson.put("checks", checksArray);
             }
 
-            stepsJsonArray.set(i, stepJson);
+            stepsJsonArray.set(stepIndex++, stepJson);
         }
         root.put("steps", stepsJsonArray);
 

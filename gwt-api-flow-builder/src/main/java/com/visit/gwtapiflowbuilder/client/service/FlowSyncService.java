@@ -53,14 +53,14 @@ public final class FlowSyncService {
         syncActiveEnvironmentFromUi();
         state.suppressJsonParse = true;
         state.jsonArea.setText(
-            FlowJsonBuilder.prettyPrint(
-                FlowJsonBuilder.build(
-                    state.metaIdBox.getValue(),
-                    state.metaVersionBox.getValue(),
-                    state.environments,
-                    state.activeEnvIndex,
-                    state.globalInputRows,
-                    state.steps)));
+                FlowJsonBuilder.prettyPrint(
+                        FlowJsonBuilder.build(
+                                state.metaIdBox.getValue(),
+                                state.metaVersionBox.getValue(),
+                                state.environments,
+                                state.activeEnvIndex,
+                                state.globalInputRows,
+                                state.steps)));
         state.suppressJsonParse = false;
         if (state.previewPanel != null) state.previewPanel.setJsonStatus(true);
         markDirty(state.jsonArea.getText());

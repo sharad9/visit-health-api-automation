@@ -1,10 +1,6 @@
 package com.visit.gwtapiflowbuilder.client.ui;
 
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
+import com.google.gwt.http.client.*;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
@@ -30,6 +26,14 @@ public final class CollectionRunnerView {
 
     // -------------------------------------------------------------------------
     // Run collection
+    // -------------------------------------------------------------------------
+
+    public static native void openReportInNewTab(String url) /*-{
+        $wnd.open(url, '_blank');
+    }-*/;
+
+    // -------------------------------------------------------------------------
+    // Run report overlay
     // -------------------------------------------------------------------------
 
     public void runCollection() {
@@ -68,7 +72,7 @@ public final class CollectionRunnerView {
     }
 
     // -------------------------------------------------------------------------
-    // Run report overlay
+    // Stat badge
     // -------------------------------------------------------------------------
 
     public void showRunReport(String json) {
@@ -84,12 +88,12 @@ public final class CollectionRunnerView {
             return;
         }
 
-        int total            = (int) reportObject.get("totalSteps").isNumber().doubleValue();
-        int passed           = (int) reportObject.get("passedSteps").isNumber().doubleValue();
-        int failed           = (int) reportObject.get("failedSteps").isNumber().doubleValue();
+        int total = (int) reportObject.get("totalSteps").isNumber().doubleValue();
+        int passed = (int) reportObject.get("passedSteps").isNumber().doubleValue();
+        int failed = (int) reportObject.get("failedSteps").isNumber().doubleValue();
         long totalDurationMs = (long) reportObject.get("totalDurationMs").isNumber().doubleValue();
-        String reportUrl     = reportObject.get("reportUrl").isString().stringValue();
-        String executedAt    = reportObject.get("executedAt").isString().stringValue();
+        String reportUrl = reportObject.get("reportUrl").isString().stringValue();
+        String executedAt = reportObject.get("executedAt").isString().stringValue();
 
         // Backdrop
         FlowPanel overlay = new FlowPanel();
@@ -140,10 +144,10 @@ public final class CollectionRunnerView {
         statsRow.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
         statsRow.getElement().getStyle().setProperty(BaseStyle.Key.GRID_TEMPLATE_COLUMNS, "repeat(4,1fr)");
         statsRow.getElement().getStyle().setProperty(BaseStyle.Key.GAP, "8px");
-        statsRow.add(statBadge("Total",    String.valueOf(total),          "#2563eb"));
-        statsRow.add(statBadge("Passed",   String.valueOf(passed),         "#16a34a"));
-        statsRow.add(statBadge("Failed",   String.valueOf(failed),         failed > 0 ? "#dc2626" : "#16a34a"));
-        statsRow.add(statBadge("Duration", totalDurationMs + " ms",        "#7c3aed"));
+        statsRow.add(statBadge("Total", String.valueOf(total), "#2563eb"));
+        statsRow.add(statBadge("Passed", String.valueOf(passed), "#16a34a"));
+        statsRow.add(statBadge("Failed", String.valueOf(failed), failed > 0 ? "#dc2626" : "#16a34a"));
+        statsRow.add(statBadge("Duration", totalDurationMs + " ms", "#7c3aed"));
         card.add(statsRow);
 
         // Step list
@@ -160,13 +164,13 @@ public final class CollectionRunnerView {
             stepList.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "8px");
             stepList.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_BG);
 
-            for (int i = 0; i < stepResultsArray.size(); i++) {
-                JSONObject stepResult = stepResultsArray.get(i).isObject();
+            for (int index = 0; index < stepResultsArray.size(); index++) {
+                JSONObject stepResult = stepResultsArray.get(index).isObject();
                 if (stepResult == null) continue;
-                boolean stepPassed    = stepResult.get("passed").isBoolean().booleanValue();
+                boolean stepPassed = stepResult.get("passed").isBoolean().booleanValue();
                 String stepIdentifier = stepResult.get("stepIdentifier").isString().stringValue();
-                long stepDurationMs   = (long) stepResult.get("durationMs").isNumber().doubleValue();
-                int stepStatusCode    = (int) stepResult.get("statusCode").isNumber().doubleValue();
+                long stepDurationMs = (long) stepResult.get("durationMs").isNumber().doubleValue();
+                int stepStatusCode = (int) stepResult.get("statusCode").isNumber().doubleValue();
 
                 FlowPanel row = new FlowPanel();
                 row.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
@@ -176,22 +180,22 @@ public final class CollectionRunnerView {
                 row.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "6px");
                 row.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_SECTION);
                 row.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_LEFT,
-                    "3px solid " + (stepPassed ? "#16a34a" : "#dc2626"));
+                        "3px solid " + (stepPassed ? "#16a34a" : "#dc2626"));
 
                 Label icon = new Label(stepPassed ? "✓" : "✗");
-                icon.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,       stepPassed ? "#16a34a" : "#dc2626");
+                icon.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, stepPassed ? "#16a34a" : "#dc2626");
                 icon.getElement().getStyle().setProperty(BaseStyle.Key.FONT_WEIGHT, "700");
-                icon.getElement().getStyle().setProperty(BaseStyle.Key.MIN_WIDTH,   "16px");
-                icon.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "12px");
+                icon.getElement().getStyle().setProperty(BaseStyle.Key.MIN_WIDTH, "16px");
+                icon.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "12px");
 
                 Label name = new Label(stepIdentifier);
-                name.getElement().getStyle().setProperty(BaseStyle.Key.FLEX,      "1");
+                name.getElement().getStyle().setProperty(BaseStyle.Key.FLEX, "1");
                 name.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "12px");
-                name.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,     Theme.COLOR_TEXT);
+                name.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
 
                 Label meta = new Label(stepStatusCode + "  " + stepDurationMs + " ms");
-                meta.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "11px");
-                meta.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,       Theme.COLOR_MUTED);
+                meta.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "11px");
+                meta.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_MUTED);
                 meta.getElement().getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, Theme.FONT_MONO);
 
                 row.add(icon);
@@ -213,36 +217,28 @@ public final class CollectionRunnerView {
         state.root.add(overlay);
     }
 
-    // -------------------------------------------------------------------------
-    // Stat badge
-    // -------------------------------------------------------------------------
-
     public FlowPanel statBadge(String label, String value, String color) {
         FlowPanel badgePanel = new FlowPanel();
         badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_SECTION);
-        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER,           "1px solid " + Theme.COLOR_BORDER);
-        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_TOP,       "3px solid " + color);
-        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS,    "8px");
-        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.PADDING,          "10px 8px");
-        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.TEXT_ALIGN,       BaseStyle.Value.CENTER);
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER, "1px solid " + Theme.COLOR_BORDER);
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_TOP, "3px solid " + color);
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "8px");
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "10px 8px");
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.TEXT_ALIGN, BaseStyle.Value.CENTER);
 
         Label valueLabel = new Label(value);
         valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_WEIGHT, "700");
-        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,       color);
-        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "18px");
+        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, color);
+        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "18px");
 
         Label titleLabel = new Label(label);
         titleLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "10px");
-        titleLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,     Theme.COLOR_MUTED);
+        titleLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_MUTED);
 
         badgePanel.add(valueLabel);
         badgePanel.add(titleLabel);
         return badgePanel;
     }
-
-    public static native void openReportInNewTab(String url) /*-{
-        $wnd.open(url, '_blank');
-    }-*/;
 
     // -------------------------------------------------------------------------
     // Private
