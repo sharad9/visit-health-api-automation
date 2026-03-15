@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API Execution Report</title>
+    <style>
+        body { margin: 0; background: #f8fafc; font-family: Inter, system-ui, sans-serif; color: #1e293b; }
+        pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: "Fira Code", ui-monospace, Menlo, monospace; }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+    class Style {
+        static Key = {
+            DISPLAY: 'display', FLEX_DIRECTION: 'flexDirection', FLEX_WRAP: 'flexWrap', FLEX: 'flex',
+            ALIGN_ITEMS: 'alignItems', JUSTIFY_CONTENT: 'justifyContent', GAP: 'gap',
+            WIDTH: 'width', MAX_WIDTH: 'maxWidth', HEIGHT: 'height', MIN_HEIGHT: 'minHeight',
+            MARGIN: 'margin', MARGIN_TOP: 'marginTop', MARGIN_BOTTOM: 'marginBottom',
+            PADDING: 'padding',
+            BORDER: 'border', BORDER_BOTTOM: 'borderBottom', BORDER_RADIUS: 'borderRadius',
+            BACKGROUND_COLOR: 'backgroundColor', COLOR: 'color',
+            FONT_SIZE: 'fontSize', FONT_WEIGHT: 'fontWeight',
+            CURSOR: 'cursor', TEXT_ALIGN: 'textAlign', BOX_SHADOW: 'boxShadow',
+            POSITION: 'position', TOP: 'top', Z_INDEX: 'zIndex',
+            OVERFLOW: 'overflow', OVERFLOW_X: 'overflowX', OVERFLOW_Y: 'overflowY',
+            WORD_BREAK: 'wordBreak'
+        };
+
+        static Value = {
+            NONE: 'none', BLOCK: 'block', FLEX: 'flex', ROW: 'row', COLUMN: 'column', WRAP: 'wrap', NOWRAP: 'nowrap',
+            POINTER: 'pointer'
+        };
+
+        #component;
+        #style = {};
+
+        constructor(component) { this.#component = component; }
+        set(key, value) {
+            const element = this.#component.getElement();
+            if (value === null || value === undefined) {
+                delete this.#style[key];
+                element.style.removeProperty(key);
+            } else {
+                this.#style[key] = value;
+                element.style[key] = value;
+            }
+            return this;
+        }
+        get(key) { return this.#component.getElement().style[key]; }
+        remove(key) { return this.set(key, null); }
+    }
+
+    class Attribute {
+        #component;
+        constructor(component) { this.#component = component; }
+        set(key, value) { this.#component.getElement().setAttribute(key, value); return this; }
+        get(key) { return this.#component.getElement().getAttribute(key); }
+    }
+
+    class Property {
+        #component;
+        constructor(component) { this.#component = component; }
+        set(key, value) { this.#component.getElement()[key] = value; return this; }
+        get(key) { return this.#component.getElement()[key]; }
+    }
+
+    class Component {
+        #element;
+        #children = [];
+        #style;
+        #attribute;
+        #property;
+
+        constructor(tagName = 'div') {
+            this.#element = document.createElement(tagName);
+            this.#style = new Style(this);
+            this.#attribute = new Attribute(this);
+            this.#property = new Property(this);
+        }
+
+        addChild(child) {
+            if (!child) return this;
+            if (child instanceof Component) {
+                this.#element.appendChild(child.getElement());
+                this.#children.push(child);
+            } else if (child instanceof Node) {
+                this.#element.appendChild(child);
+            }
+            return this;
+        }
+
+        addChildren(...children) { children.forEach(child => this.addChild(child)); return this; }
+        clearChildren() { this.#element.innerHTML = ''; this.#children = []; return this; }
+        setText(text) { this.#element.textContent = text; return this; }
+        addClass(name) { this.#element.classList.add(name); return this; }
+        addEventListener(event, handler) { this.#element.addEventListener(event, handler); return this; }
+        getElement() { return this.#element; }
+        setStyle(key, value) { this.#style.set(key, value); return this; }
+        setAttribute(key, value) { this.#attribute.set(key, value); return this; }
+        setProperty(key, value) { this.#property.set(key, value); return this; }
+    }
+
+    class Div extends Component { constructor() { super('div'); } }
+    class Pre extends Component { constructor() { super('pre'); } }
+    class Main extends Component { constructor() { super('main'); } }
+    class Nav extends Component { constructor() { super('nav'); } }
+    class Section extends Component { constructor() { super('section'); } }
+    class Paragraph extends Component { constructor() { super('p'); } }
+    class Heading extends Component { constructor(level = 1) { super('h' + level); } }
+    class Anchor extends Component { constructor(label = '') { super('a'); this.setText(label); } }
+    class TextArea extends Component { constructor() { super('textarea'); } }
+    class Button extends Component { constructor(label = '') { super('button'); this.setText(label); } }
+    class Frame extends Component { constructor() { super('iframe'); } }
+
+    class VerticalLayout extends Div {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.DISPLAY, Style.Value.FLEX)
+                .setStyle(Style.Key.FLEX_DIRECTION, Style.Value.COLUMN)
+                .setStyle(Style.Key.FLEX_WRAP, Style.Value.NOWRAP);
+        }
+    }
+
+    class HorizontalLayout extends Div {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.DISPLAY, Style.Value.FLEX)
+                .setStyle(Style.Key.FLEX_DIRECTION, Style.Value.ROW)
+                .setStyle(Style.Key.FLEX_WRAP, Style.Value.WRAP);
+        }
+    }
+
+    class Container extends VerticalLayout {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.WIDTH, '100%').setStyle(Style.Key.MAX_WIDTH, '1700px').setStyle(Style.Key.MARGIN, '0 auto').setStyle(Style.Key.PADDING, '20px');
+        }
+    }
+
+    class Card extends VerticalLayout {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff').setStyle(Style.Key.BORDER, '1px solid #e2e8f0').setStyle(Style.Key.BORDER_RADIUS, '12px').setStyle(Style.Key.PADDING, '16px');
+        }
+    }
+
+    function decodeEscapedText(value) {
+        const text = String(value ?? '');
+        if (!text) return '';
+        return text
+            .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+            .replace(/\\r/g, '\r')
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\/g, '\\');
+    }
+
+    function safeJson(raw) {
+        if (raw == null) return 'null';
+        if (typeof raw === 'object') return JSON.stringify(raw, null, 2);
+        const normalized = decodeEscapedText(raw).trim();
+        if (!normalized) return '';
+        try { return JSON.stringify(JSON.parse(normalized), null, 2); } catch (_) { return normalized; }
+    }
+
+    function tryParseJson(raw) {
+        if (raw == null) return null;
+        if (typeof raw === 'object') return raw;
+        const normalized = decodeEscapedText(raw).trim();
+        if (!normalized) return null;
+        try { return JSON.parse(normalized); } catch (_) { return null; }
+    }
+
+    function isEmptyObject(value) {
+        return value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0;
+    }
+
+    function parseStructuredPayload(textValue) {
+        const text = decodeEscapedText(textValue);
+        const headerKey = 'Headers:\n';
+        const bodyKey = '\n\nBody:\n';
+
+        if (!text.includes(headerKey) || !text.includes(bodyKey)) {
+            const rawObj = tryParseJson(text);
+            const isMultipart = rawObj && rawObj.type === 'multipart/form-data';
+            return {
+                headers: '',
+                body: safeJson(text),
+                file: isMultipart ? safeJson(rawObj.file ?? null) : '',
+                form: isMultipart ? (isEmptyObject(rawObj.form) ? '' : safeJson(rawObj.form ?? null)) : ''
+            };
+        }
+
+        const headerStart = text.indexOf(headerKey) + headerKey.length;
+        const bodyStart = text.indexOf(bodyKey);
+        const headersText = text.substring(headerStart, bodyStart).trim();
+        const bodyText = text.substring(bodyStart + bodyKey.length).trim();
+        const bodyObject = tryParseJson(bodyText);
+        const isMultipart = bodyObject && bodyObject.type === 'multipart/form-data';
+
+        return {
+            headers: safeJson(headersText),
+            body: safeJson(bodyText),
+            file: isMultipart ? safeJson(bodyObject.file ?? null) : '',
+            form: isMultipart ? (isEmptyObject(bodyObject.form) ? '' : safeJson(bodyObject.form ?? null)) : ''
+        };
+    }
+
+    function extractStatusCode(statusText) {
+        const match = String(statusText || '').match(/^(\d+)/);
+        return match ? Number(match[1]) : 0;
+    }
+
+    function extractDurationMs(statusText) {
+        const match = String(statusText || '').match(/\((\d+)\s*ms\)/i);
+        return match ? Number(match[1]) : 0;
+    }
+
+    function statusPill(code, ok) {
+        return new Div()
+            .setText(String(code || 'NA'))
+            .setStyle(Style.Key.DISPLAY, 'inline-block')
+            .setStyle(Style.Key.PADDING, '2px 8px')
+            .setStyle(Style.Key.BORDER_RADIUS, '999px')
+            .setStyle(Style.Key.FONT_SIZE, '11px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.BACKGROUND_COLOR, ok ? '#dcfce7' : '#fee2e2')
+            .setStyle(Style.Key.COLOR, ok ? '#166534' : '#991b1b');
+    }
+
+    function methodPill(method) {
+        const normalized = String(method || 'NA').toUpperCase();
+        const palette = {
+            GET: ['#dbeafe', '#1e40af'],
+            POST: ['#dcfce7', '#166534'],
+            PUT: ['#fef3c7', '#92400e'],
+            PATCH: ['#ede9fe', '#5b21b6'],
+            DELETE: ['#fee2e2', '#991b1b']
+        };
+        const [bg, fg] = palette[normalized] || ['#e2e8f0', '#334155'];
+
+        return new Div()
+            .setText(normalized)
+            .setStyle(Style.Key.DISPLAY, 'inline-block')
+            .setStyle(Style.Key.PADDING, '2px 8px')
+            .setStyle(Style.Key.BORDER_RADIUS, '6px')
+            .setStyle(Style.Key.FONT_SIZE, '11px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.BACKGROUND_COLOR, bg)
+            .setStyle(Style.Key.COLOR, fg);
+    }
+
+    function codeBlock(text) {
+        return new Pre()
+            .setText(text || '')
+            .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+            .setStyle(Style.Key.BORDER, '1px solid #dbe3ee')
+            .setStyle(Style.Key.BORDER_RADIUS, '8px')
+            .setStyle(Style.Key.PADDING, '10px')
+            .setStyle(Style.Key.FONT_SIZE, '12px')
+            .setStyle(Style.Key.COLOR, '#0f172a')
+            .setStyle(Style.Key.OVERFLOW, 'auto');
+    }
+
+    function sectionTitle(text) {
+        return new Div()
+            .setText(text)
+            .setStyle(Style.Key.FONT_SIZE, '12px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.COLOR, '#334155')
+            .setStyle(Style.Key.MARGIN_BOTTOM, '6px');
+    }
+
+    const data = `{{JSON_DATA}}`;
+    const summary = data.summary || {};
+
+    const steps = (data.steps || []).map((step, index) => {
+        const request = parseStructuredPayload(step.request);
+        const response = parseStructuredPayload(step.response);
+        const statusCode = extractStatusCode(step.status);
+        const durationMs = extractDurationMs(step.status);
+
+        return {
+            index,
+            name: step.name || `step-${index + 1}`,
+            method: step.method || 'NA',
+            url: step.url || 'NA',
+            ok: !!step.ok,
+            statusCode,
+            durationMs,
+            request,
+            response,
+            rawStatus: step.status || ''
+        };
+    });
+
+    const app = document.getElementById('app');
+    const page = new Container();
+
+    const header = new Card()
+        .setStyle(Style.Key.MARGIN_BOTTOM, '12px');
+
+    header.addChildren(
+        new Div().setText(data.title || 'API Execution Report').setStyle(Style.Key.FONT_SIZE, '24px').setStyle(Style.Key.FONT_WEIGHT, '800').setStyle(Style.Key.COLOR, '#0f172a'),
+        new Div().setText(`Run: ${data.timestamp || 'NA'}`).setStyle(Style.Key.FONT_SIZE, '13px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '6px'),
+        new Div().setText(`Current Step: ${summary.currentStep || 'Final'}`).setStyle(Style.Key.FONT_SIZE, '13px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '4px')
+    );
+
+    const stats = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '10px')
+        .setStyle(Style.Key.MARGIN_TOP, '12px');
+
+    function statCard(label, value, color) {
+        return new VerticalLayout()
+            .setStyle(Style.Key.FLEX, '1')
+            .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+            .setStyle(Style.Key.BORDER_RADIUS, '8px')
+            .setStyle(Style.Key.PADDING, '10px')
+            .setStyle(Style.Key.BORDER_TOP, `3px solid ${color}`)
+            .addChildren(
+                new Div().setText(label).setStyle(Style.Key.FONT_SIZE, '11px').setStyle(Style.Key.FONT_WEIGHT, '700').setStyle(Style.Key.COLOR, '#64748b'),
+                new Div().setText(String(value)).setStyle(Style.Key.FONT_SIZE, '20px').setStyle(Style.Key.FONT_WEIGHT, '800').setStyle(Style.Key.COLOR, color).setStyle(Style.Key.MARGIN_TOP, '4px')
+            );
+    }
+
+    stats.addChildren(
+        statCard('Total', summary.totalFlowSteps || 0, '#1e293b'),
+        statCard('Executed', summary.total || 0, '#7c3aed'),
+        statCard('Passed', summary.passed || 0, '#10b981'),
+        statCard('Failed', summary.failed || 0, '#ef4444'),
+        statCard('Total Time (ms)', summary.totalExecutionTimeInMillis || 0, '#0284c7')
+    );
+
+    header.addChild(stats);
+    page.addChild(header);
+
+    const workspace = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '12px');
+
+    const leftPane = new VerticalLayout()
+        .setStyle(Style.Key.WIDTH, '360px')
+        .setStyle(Style.Key.MIN_HEIGHT, '860px')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+        .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BORDER_RADIUS, '12px')
+        .setStyle(Style.Key.OVERFLOW_X, 'hidden')
+        .setStyle(Style.Key.OVERFLOW_Y, 'auto');
+
+    const rightPane = new VerticalLayout()
+        .setStyle(Style.Key.FLEX, '1')
+        .setStyle(Style.Key.MIN_HEIGHT, '860px')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+        .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BORDER_RADIUS, '12px')
+        .setStyle(Style.Key.OVERFLOW, 'hidden');
+
+    const listHeader = new Div()
+        .setText('APIs')
+        .setStyle(Style.Key.PADDING, '12px')
+        .setStyle(Style.Key.FONT_SIZE, '13px')
+        .setStyle(Style.Key.FONT_WEIGHT, '800')
+        .setStyle(Style.Key.COLOR, '#334155')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0');
+
+    leftPane.addChild(listHeader);
+
+    const listWrap = new VerticalLayout();
+    leftPane.addChild(listWrap);
+
+    const detailHeader = new VerticalLayout()
+        .setStyle(Style.Key.PADDING, '12px')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0');
+
+    const detailTitle = new Div().setStyle(Style.Key.FONT_SIZE, '15px').setStyle(Style.Key.FONT_WEIGHT, '700').setStyle(Style.Key.COLOR, '#0f172a');
+    const detailMeta = new Div().setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '4px').setStyle(Style.Key.WORD_BREAK, 'break-all');
+
+    detailHeader.addChildren(detailTitle, detailMeta);
+
+    const tabsBar = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '6px')
+        .setStyle(Style.Key.PADDING, '10px 12px')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#f8fafc');
+
+    const tabContent = new VerticalLayout()
+        .setStyle(Style.Key.PADDING, '12px')
+        .setStyle(Style.Key.OVERFLOW, 'auto')
+        .setStyle(Style.Key.HEIGHT, '730px');
+
+    rightPane.addChildren(detailHeader, tabsBar, tabContent);
+
+    workspace.addChildren(leftPane, rightPane);
+    page.addChild(workspace);
+
+    app.appendChild(page.getElement());
+
+    const listRows = [];
+
+    function renderTabsForStep(step) {
+        tabsBar.getElement().innerHTML = '';
+        tabContent.getElement().innerHTML = '';
+
+        const tabs = [
+            { id: 'meta', label: 'Meta', render: renderMeta },
+            { id: 'reqHeaders', label: 'Request Headers', render: () => renderCodeSection('Request Headers', step.request.headers || '{}') },
+            { id: 'reqBody', label: 'Request Body', render: () => renderCodeSection('Request Body', step.request.body || '') },
+            { id: 'resHeaders', label: 'Response Headers', render: () => renderCodeSection('Response Headers', step.response.headers || '{}') },
+            { id: 'resBody', label: 'Response Body', render: () => renderCodeSection('Response Body', step.response.body || '') }
+        ];
+
+        if (step.request.file) {
+            tabs.splice(3, 0, { id: 'reqFile', label: 'Req File', render: () => renderCodeSection('Request File', step.request.file) });
+        }
+        if (step.request.form) {
+            tabs.splice(step.request.file ? 4 : 3, 0, { id: 'reqForm', label: 'Req Form', render: () => renderCodeSection('Request Form Fields', step.request.form) });
+        }
+
+        let activeTab = tabs[0].id;
+
+        function drawTabs() {
+            tabsBar.getElement().innerHTML = '';
+            tabs.forEach((tab) => {
+                const tabButton = new Button(tab.label)
+                    .setStyle(Style.Key.PADDING, '6px 10px')
+                    .setStyle(Style.Key.BORDER, '1px solid ' + (activeTab === tab.id ? '#2563eb' : '#d1d5db'))
+                    .setStyle(Style.Key.BORDER_RADIUS, '8px')
+                    .setStyle(Style.Key.BACKGROUND_COLOR, activeTab === tab.id ? '#eff6ff' : '#ffffff')
+                    .setStyle(Style.Key.COLOR, activeTab === tab.id ? '#1d4ed8' : '#334155')
+                    .setStyle(Style.Key.FONT_SIZE, '12px')
+                    .setStyle(Style.Key.FONT_WEIGHT, '700')
+                    .setStyle(Style.Key.CURSOR, Style.Value.POINTER)
+                    .addEventListener('click', () => {
+                        activeTab = tab.id;
+                        drawTabs();
+                        drawContent();
+                    });
+                tabsBar.addChild(tabButton);
+            });
+        }
+
+        function drawContent() {
+            tabContent.getElement().innerHTML = '';
+            const tab = tabs.find((item) => item.id === activeTab);
+            if (tab) tab.render();
+        }
+
+        function renderMeta() {
+            const metaWrap = new VerticalLayout().setStyle(Style.Key.GAP, '8px');
+            const rows = [
+                ['Method', step.method],
+                ['URL', step.url],
+                ['Status', String(step.statusCode || 'NA')],
+                ['Duration (ms)', String(step.durationMs || 0)],
+                ['Result', step.ok ? 'PASS' : 'FAIL']
+            ];
+
+            rows.forEach(([k, v]) => {
+                metaWrap.addChild(
+                    new HorizontalLayout()
+                        .setStyle(Style.Key.GAP, '8px')
+                        .addChildren(
+                            new Div().setText(k).setStyle(Style.Key.WIDTH, '130px').setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.FONT_WEIGHT, '700').setStyle(Style.Key.COLOR, '#475569'),
+                            new Div().setText(v).setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.COLOR, '#0f172a').setStyle(Style.Key.WORD_BREAK, 'break-all')
+                        )
+                );
+            });
+
+            tabContent.addChild(metaWrap);
+        }
+
+        function renderCodeSection(title, content) {
+            tabContent.addChildren(sectionTitle(title), codeBlock(content));
+        }
+
+        drawTabs();
+        drawContent();
+    }
+
+    function selectStep(selectedIndex) {
+        listRows.forEach((row, index) => {
+            row
+                .setStyle(Style.Key.BACKGROUND_COLOR, index === selectedIndex ? '#eff6ff' : '#ffffff')
+                .setStyle(Style.Key.BORDER_LEFT, index === selectedIndex ? '3px solid #2563eb' : '3px solid transparent');
+        });
+
+        const step = steps[selectedIndex];
+        if (!step) return;
+
+        detailTitle.getElement().innerHTML = '';
+        detailTitle.addChildren(methodPill(step.method), document.createTextNode(' ' + step.name));
+        detailMeta.setText(`${step.url} | ${step.statusCode || 'NA'} | ${step.durationMs || 0} ms`);
+        renderTabsForStep(step);
+    }
+
+    steps.forEach((step, index) => {
+        const row = new Div()
+            .setStyle(Style.Key.PADDING, '10px 10px 10px 12px')
+            .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #eef2f7')
+            .setStyle(Style.Key.CURSOR, 'pointer')
+            .setStyle(Style.Key.BORDER_LEFT, '3px solid transparent')
+            .addEventListener('click', () => selectStep(index));
+
+        const top = new HorizontalLayout().setStyle(Style.Key.JUSTIFY_CONTENT, 'space-between').setStyle(Style.Key.ALIGN_ITEMS, 'center');
+        const left = new HorizontalLayout().setStyle(Style.Key.GAP, '6px').setStyle(Style.Key.ALIGN_ITEMS, 'center');
+        left.addChildren(methodPill(step.method), new Div().setText(step.name).setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.FONT_WEIGHT, '600').setStyle(Style.Key.COLOR, '#0f172a'));
+        top.addChildren(left, statusPill(step.statusCode || 'NA', step.ok));
+
+        const bottom = new Div().setStyle(Style.Key.FONT_SIZE, '11px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '6px').setStyle(Style.Key.WORD_BREAK, 'break-all').setText(`${step.url} | ${step.durationMs || 0} ms`);
+
+        row.addChildren(top, bottom);
+        listRows.push(row);
+        listWrap.addChild(row);
+    });
+
+    if (steps.length > 0) {
+        selectStep(0);
+    } else {
+        detailTitle.setText('No API steps available');
+        detailMeta.setText('Run did not capture API logs.');
+        tabContent.addChild(new Div().setText('No request/response details to display.').setStyle(Style.Key.FONT_SIZE, '13px').setStyle(Style.Key.COLOR, '#64748b'));
+    }
+
+    if (data.error) {
+        const errorCard = new Div()
+            .setStyle(Style.Key.BACKGROUND_COLOR, '#fef2f2')
+            .setStyle(Style.Key.BORDER, '1px solid #fecaca')
+            .setStyle(Style.Key.BORDER_RADIUS, '12px')
+            .setStyle(Style.Key.PADDING, '12px')
+            .setStyle(Style.Key.MARGIN_TOP, '12px');
+
+        errorCard.addChildren(
+            new Div().setText('Execution Error').setStyle(Style.Key.FONT_SIZE, '14px').setStyle(Style.Key.FONT_WEIGHT, '800').setStyle(Style.Key.COLOR, '#b91c1c'),
+            new Div().setText(`${data.error.type || 'Error'}: ${data.error.message || 'Unknown error'}`).setStyle(Style.Key.MARGIN_TOP, '6px').setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.COLOR, '#7f1d1d'),
+            codeBlock(String(data.error.stackTrace || ''))
+                .setStyle(Style.Key.MARGIN_TOP, '8px')
+                .setStyle(Style.Key.BACKGROUND_COLOR, '#fff')
+        );
+
+        page.addChild(errorCard);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+{
+  "journey": "userAuthLoginVerifyJourney",
+  "displayName": "Auth: User Auth Login Verify Journey",
+  "environment": "UAT",
+  "generatedAt": "2026-03-10 10:03:23.194",
+  "totalExecutions": 2,
+  "totalExecutionTimeInMillis": 2803,
+  "flowSteps": [
+    "1. login-phone",
+    "2. verify-otp"
+  ],
+  "currentStep": "2. verify-otp",
+  "executions": [
+    {
+      "index": 1,
+      "step": "1. login-phone",
+      "method": "POST",
+      "url": "https://api.samuraijack.xyz/latios/new-auth/login-phone",
+      "requestHeaders": {
+        "Content-Type": "application/json"
+      },
+      "requestBody": "{\"phone\":\"9136186721\",\"countryCode\":91,\"platform\":\"WEB\"}",
+      "statusCode": 200,
+      "responseHeaders": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, token, transactionId, sessionId, agentId, dopeEntityId, entityId",
+        "access-control-allow-methods": "PUT, GET, POST, DELETE, PATCH, OPTIONS",
+        "cache-control": "no-store",
+        "content-length": "21",
+        "content-security-policy": "frame-ancestors *;default-src *;script-src * 'unsafe-inline';script-src-attr 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';form-action * 'unsafe-inline';base-uri 'self';block-all-mixed-content;upgrade-insecure-requests",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-embedder-policy": "unsafe-none",
+        "cross-origin-opener-policy": "unsafe-none",
+        "cross-origin-resource-policy": "cross-origin",
+        "date": "Tue, 10 Mar 2026 04:33:23 GMT",
+        "etag": "W/\"15-wxck7bs2ooBEY9OcukPwVThLbnk\"",
+        "expect-ct": "max-age=0",
+        "origin-agent-cluster": "?1",
+        "permission-policy": "geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*",
+        "referrer-policy": "no-referrer",
+        "server": "Apache",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0"
+      },
+      "responseBody": "{\"message\":\"otpSent\"}"
+    },
+    {
+      "index": 2,
+      "step": "2. verify-otp",
+      "method": "POST",
+      "url": "https://api.samuraijack.xyz/latios/new-auth/otp",
+      "requestHeaders": {
+        "Content-Type": "application/json"
+      },
+      "requestBody": "{\"phone\":\"9136186721\",\"otp\":\"1234\",\"platform\":\"WEB\"}",
+      "statusCode": 200,
+      "responseHeaders": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, token, transactionId, sessionId, agentId, dopeEntityId, entityId",
+        "access-control-allow-methods": "PUT, GET, POST, DELETE, PATCH, OPTIONS",
+        "access-control-expose-headers": "Authorization",
+        "authorization": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAzLCJleHAiOjE4MDQ2NTMyMDN9.bxQqep8_r-0EVgcu0RVgTrulg4iB4dgx6g0F9UJhHAs",
+        "cache-control": "no-store",
+        "content-length": "41",
+        "content-security-policy": "frame-ancestors *;default-src *;script-src * 'unsafe-inline';script-src-attr 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';form-action * 'unsafe-inline';base-uri 'self';block-all-mixed-content;upgrade-insecure-requests",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-embedder-policy": "unsafe-none",
+        "cross-origin-opener-policy": "unsafe-none",
+        "cross-origin-resource-policy": "cross-origin",
+        "date": "Tue, 10 Mar 2026 04:33:23 GMT",
+        "etag": "W/\"29-lKOpVTve7QxIxm/ECA2s3IxFh7g\"",
+        "expect-ct": "max-age=0",
+        "origin-agent-cluster": "?1",
+        "permission-policy": "geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*",
+        "referrer-policy": "no-referrer",
+        "server": "Apache",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-dns-prefetch-control": "off",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0"
+      },
+      "responseBody": "{\"screen\":\"home\",\"message\":\"otpVerified\"}"
+    }
+  ]
+}

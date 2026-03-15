@@ -1,0 +1,466 @@
+{
+  "metadata": {
+    "identifier": "auth-pharmacy-upload-prescription.flow.meta",
+    "version": "1.0"
+  },
+  "environment": {
+    "baseUrl": "https://uat.api.example.com",
+    "defaults": {
+      "timeoutMilliseconds": 10000,
+      "retryPolicy": {
+        "maximumAttempts": 2,
+        "delayMilliseconds": 500
+      }
+    }
+  },
+  "environments": {
+    "activeEnvironmentId": "2",
+    "environmentItems": [
+      {
+        "environmentId": "2",
+        "environmentName": "UAT_2",
+        "baseUrl": "https://uat.api.example.com",
+        "defaults": {
+          "timeoutMilliseconds": 10000,
+          "retryPolicy": {
+            "maximumAttempts": 2,
+            "delayMilliseconds": 500
+          }
+        },
+        "environmentVariables": {
+          "BASE_URL": "https://uat.api.example.com"
+        }
+      },
+      {
+        "environmentId": "3",
+        "environmentName": "PROD",
+        "baseUrl": "https://api.example.com",
+        "defaults": {
+          "timeoutMilliseconds": 10000,
+          "retryPolicy": {
+            "maximumAttempts": 2,
+            "delayMilliseconds": 500
+          }
+        },
+        "environmentVariables": {
+          "BASE_URL": "https://api.example.com",
+          "TENANT_ID": "prod-tenant"
+        }
+      }
+    ]
+  },
+  "globalInputs": {
+    "USER_PHONE": "9136186721",
+    "USER_OTP": "1234",
+    "COUNTRY_CODE": "91",
+    "PLATFORM": "WEB",
+    "ENTITY_ID": "10",
+    "ADDRESS_ID": "6348",
+    "PATIENT_ID": "1441",
+    "PRESCRIPTION_FILE_PATH": "target/test-artifacts/final_prescription.pdf",
+    "PRESCRIPTION_FILE_NAME": "final_prescription.pdf",
+    "DOCTOR_JWT_TOKEN": "<doctor-jwt-here>",
+    "APPOINTMENT_DATE": "2026-03-04",
+    "PRESCRIPTION_VALIDITY_DATE": "2026-03-31",
+    "DASHBOARD_VERSION": "1800009616",
+    "CART_SUBMIT_BASE_URL": "http://127.0.0.1:2020",
+    "ORDER_AMOUNT": "1350",
+    "STORE_ID": "11488"
+  },
+  "steps": [
+    {
+      "stepIdentifier": "STEP_1_LOGIN_PHONE",
+      "request": {
+        "httpMethod": "POST",
+        "requestUrl": "https://api.samuraijack.xyz/latios/new-auth/login-phone",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{USER_PHONE}}",
+          "countryCode": "{{COUNTRY_CODE}}",
+          "platform": "{{PLATFORM}}"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        },
+        {
+          "source": "body"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_2_VERIFY_OTP",
+      "request": {
+        "httpMethod": "POST",
+        "requestUrl": "https://api.samuraijack.xyz/latios/new-auth/otp",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{USER_PHONE}}",
+          "otp": "{{USER_OTP}}",
+          "platform": "{{PLATFORM}}"
+        }
+      },
+      "extraction": {
+        "headerValues": {
+          "USER_JWT_TOKEN": "authorization"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        },
+        {
+          "source": "body"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_3_ADD_MULTIPLE_FILES",
+      "request": {
+        "httpMethod": "POST",
+        "requestUrl": "https://api.getvisitapp.net/absol/digitisation/add-multiple-files",
+        "timeoutMilliseconds": 15000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "multipart/form-data",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        },
+        "body": {
+          "type": "multipart/form-data",
+          "file": {
+            "fieldName": "file",
+            "filePath": "{{PRESCRIPTION_FILE_PATH}}",
+            "absoluteFilePath": "{{PRESCRIPTION_ABSOLUTE_FILE_PATH}}",
+            "exists": true,
+            "fileName": "{{PRESCRIPTION_FILE_NAME}}",
+            "fileSizeBytes": 647
+          },
+          "form": {}
+        }
+      },
+      "extraction": {
+        "bodyJsonPaths": {
+          "PHARMACY_PRESCRIPTION_ID": "$.pharmacyPrescriptionId"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        },
+        {
+          "source": "body"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_4_UPLOAD_PRESCRIPTION",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "https://api.getvisitapp.net/absol/digitisation/upload-prescription",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_5_CART_ADDRESSES",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "https://api.getvisitapp.net/absol/cart/addresses",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_6_SELECT_PATIENT",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "https://api.samuraijack.xyz/latios/labs-v2/patients",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_7_SUBMIT_REQUEST",
+      "request": {
+        "httpMethod": "POST",
+        "requestUrl": "https://api.getvisitapp.net/absol/digitisation/submit-request",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        },
+        "body": {
+          "pharmacyPrescriptionId": "{{STEP_3_ADD_MULTIPLE_FILES_REQUEST_BODY_PHARMACY_PRESCRIPTION_ID}}",
+          "addressId": "{{ADDRESS_ID}}",
+          "patientId": "{{PATIENT_ID}}"
+        }
+      },
+      "extraction": {
+        "bodyJsonPaths": {
+          "DIGITISATION_ID": "$.digitisationId"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        },
+        {
+          "source": "body"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_8_SAVE_CART_ITEMS",
+      "request": {
+        "httpMethod": "PUT",
+        "requestUrl": "https://api.getvisitapp.net/absol/medicines/save/cartItems",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{DOCTOR_JWT_TOKEN}}"
+        },
+        "body": {
+          "cartItem": {
+            "dimDrugMasterId": 397349,
+            "masterGroupItemCode": 653419136,
+            "name": "PAN IV 40MG INJECTION",
+            "subMasterName": null,
+            "digitisationId": "{{STEP_7_SUBMIT_REQUEST_REQUEST_BODY_DIGITISATION_ID}}",
+            "providers": [
+              {
+                "dimDrugId": 672233,
+                "partnerId": 1,
+                "name": "PAN IV 40MG INJECTION",
+                "isAvailable": 1,
+                "genericName": "PAN IV 40MG INJECTION",
+                "dosage": "1-0-0: once a day in the morning",
+                "prescribedQuantity": null,
+                "duration": "30",
+                "durationType": "Days",
+                "meal": "After",
+                "notes": "",
+                "coveredUnderOpd": 1,
+                "isSubstitute": 0
+              }
+            ]
+          }
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_9_MARK_DIGITISED",
+      "request": {
+        "httpMethod": "POST",
+        "requestUrl": "https://api.samuraijack.xyz/latios/digitisations/requests/mark-digitised",
+        "timeoutMilliseconds": 15000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{DOCTOR_JWT_TOKEN}}"
+        },
+        "body": {
+          "action": "complete",
+          "digitisationId": "{{STEP_7_SUBMIT_REQUEST_REQUEST_BODY_DIGITISATION_ID}}",
+          "appointmentDate": "{{APPOINTMENT_DATE}}",
+          "prescriptionValidityDate": "{{PRESCRIPTION_VALIDITY_DATE}}",
+          "doctorName": "Dr. S. Manoharan",
+          "centerName": "S. V. Clinic",
+          "centerAddress": "85 S.V.S.G Cottage 5th Main Road Kaviarasu Kannadasan Nagar Vyasarpadi Landmark: Near Dena Bank, Chennai",
+          "consultationId": "",
+          "doctorId": 134473,
+          "centerId": 113003,
+          "verticalId": 3,
+          "practiceId": 84622,
+          "diagnosis": "Maternal care for anti-D [Rh] antibodies, first trimester, fetus 3 - O36.0113 - O36.0113",
+          "diagnosisSource": true,
+          "symptoms": "",
+          "isCritical": 0,
+          "icdCode": "O36.0113",
+          "secondaryDiagnosis": "Karyotype 45, X - Q96.0 - Q96.0",
+          "secondaryDiagnosisIcdCode": "Q96.0",
+          "blockerConsultationId": "",
+          "commonDigitisationId": "",
+          "exceptionalAdditionReason": "",
+          "googlePlace": "",
+          "addedMedicines": [],
+          "qcStatus": 0,
+          "startedAt": 1772622401614,
+          "stepOneCompletedAt": 1772622432081,
+          "aiAssisted": false,
+          "isPatientManuallySelected": true
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_10_DASHBOARD",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "https://api.getvisitapp.net/absol/newDashboard",
+        "timeoutMilliseconds": 15000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_11_CARTS",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "https://api.getvisitapp.net/absol/carts",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        }
+      },
+      "extraction": {
+        "bodyJsonPaths": {
+          "CART_ID": "$.carts[0].cartId"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_12_SELECT_CART",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "https://api.getvisitapp.net/absol/cart/prescription/cartId/{{STEP_11_CARTS_REQUEST_BODY_CART_ID}}",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json",
+          "authorization": "{{STEP_2_VERIFY_OTP_REQUEST_HEADER_USER_JWT_TOKEN}}",
+          "entityId": "{{ENTITY_ID}}"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_13_PLACE_ORDER",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "{{CART_SUBMIT_BASE_URL}}/cart/submit",
+        "timeoutMilliseconds": 15000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    }
+  ]
+}

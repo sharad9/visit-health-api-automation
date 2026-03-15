@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API Execution Report</title>
+    <style>
+        body { margin: 0; background: #f8fafc; font-family: Inter, system-ui, sans-serif; color: #1e293b; }
+        pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-family: "Fira Code", ui-monospace, Menlo, monospace; }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+    class Style {
+        static Key = {
+            DISPLAY: 'display', FLEX_DIRECTION: 'flexDirection', FLEX_WRAP: 'flexWrap', FLEX: 'flex',
+            ALIGN_ITEMS: 'alignItems', JUSTIFY_CONTENT: 'justifyContent', GAP: 'gap',
+            WIDTH: 'width', MAX_WIDTH: 'maxWidth', HEIGHT: 'height', MIN_HEIGHT: 'minHeight',
+            MARGIN: 'margin', MARGIN_TOP: 'marginTop', MARGIN_BOTTOM: 'marginBottom',
+            PADDING: 'padding',
+            BORDER: 'border', BORDER_BOTTOM: 'borderBottom', BORDER_RADIUS: 'borderRadius',
+            BACKGROUND_COLOR: 'backgroundColor', COLOR: 'color',
+            FONT_SIZE: 'fontSize', FONT_WEIGHT: 'fontWeight',
+            CURSOR: 'cursor', TEXT_ALIGN: 'textAlign', BOX_SHADOW: 'boxShadow',
+            POSITION: 'position', TOP: 'top', Z_INDEX: 'zIndex',
+            OVERFLOW: 'overflow', OVERFLOW_X: 'overflowX', OVERFLOW_Y: 'overflowY',
+            WORD_BREAK: 'wordBreak'
+        };
+
+        static Value = {
+            NONE: 'none', BLOCK: 'block', FLEX: 'flex', ROW: 'row', COLUMN: 'column', WRAP: 'wrap', NOWRAP: 'nowrap',
+            POINTER: 'pointer'
+        };
+
+        #component;
+        #style = {};
+
+        constructor(component) { this.#component = component; }
+        set(key, value) {
+            const element = this.#component.getElement();
+            if (value === null || value === undefined) {
+                delete this.#style[key];
+                element.style.removeProperty(key);
+            } else {
+                this.#style[key] = value;
+                element.style[key] = value;
+            }
+            return this;
+        }
+        get(key) { return this.#component.getElement().style[key]; }
+        remove(key) { return this.set(key, null); }
+    }
+
+    class Attribute {
+        #component;
+        constructor(component) { this.#component = component; }
+        set(key, value) { this.#component.getElement().setAttribute(key, value); return this; }
+        get(key) { return this.#component.getElement().getAttribute(key); }
+    }
+
+    class Property {
+        #component;
+        constructor(component) { this.#component = component; }
+        set(key, value) { this.#component.getElement()[key] = value; return this; }
+        get(key) { return this.#component.getElement()[key]; }
+    }
+
+    class Component {
+        #element;
+        #children = [];
+        #style;
+        #attribute;
+        #property;
+
+        constructor(tagName = 'div') {
+            this.#element = document.createElement(tagName);
+            this.#style = new Style(this);
+            this.#attribute = new Attribute(this);
+            this.#property = new Property(this);
+        }
+
+        addChild(child) {
+            if (!child) return this;
+            if (child instanceof Component) {
+                this.#element.appendChild(child.getElement());
+                this.#children.push(child);
+            } else if (child instanceof Node) {
+                this.#element.appendChild(child);
+            }
+            return this;
+        }
+
+        addChildren(...children) { children.forEach(child => this.addChild(child)); return this; }
+        clearChildren() { this.#element.innerHTML = ''; this.#children = []; return this; }
+        setText(text) { this.#element.textContent = text; return this; }
+        addClass(name) { this.#element.classList.add(name); return this; }
+        addEventListener(event, handler) { this.#element.addEventListener(event, handler); return this; }
+        getElement() { return this.#element; }
+        setStyle(key, value) { this.#style.set(key, value); return this; }
+        setAttribute(key, value) { this.#attribute.set(key, value); return this; }
+        setProperty(key, value) { this.#property.set(key, value); return this; }
+    }
+
+    class Div extends Component { constructor() { super('div'); } }
+    class Pre extends Component { constructor() { super('pre'); } }
+    class Main extends Component { constructor() { super('main'); } }
+    class Nav extends Component { constructor() { super('nav'); } }
+    class Section extends Component { constructor() { super('section'); } }
+    class Paragraph extends Component { constructor() { super('p'); } }
+    class Heading extends Component { constructor(level = 1) { super('h' + level); } }
+    class Anchor extends Component { constructor(label = '') { super('a'); this.setText(label); } }
+    class TextArea extends Component { constructor() { super('textarea'); } }
+    class Button extends Component { constructor(label = '') { super('button'); this.setText(label); } }
+    class Frame extends Component { constructor() { super('iframe'); } }
+
+    class VerticalLayout extends Div {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.DISPLAY, Style.Value.FLEX)
+                .setStyle(Style.Key.FLEX_DIRECTION, Style.Value.COLUMN)
+                .setStyle(Style.Key.FLEX_WRAP, Style.Value.NOWRAP);
+        }
+    }
+
+    class HorizontalLayout extends Div {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.DISPLAY, Style.Value.FLEX)
+                .setStyle(Style.Key.FLEX_DIRECTION, Style.Value.ROW)
+                .setStyle(Style.Key.FLEX_WRAP, Style.Value.WRAP);
+        }
+    }
+
+    class Container extends VerticalLayout {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.WIDTH, '100%').setStyle(Style.Key.MAX_WIDTH, '1700px').setStyle(Style.Key.MARGIN, '0 auto').setStyle(Style.Key.PADDING, '20px');
+        }
+    }
+
+    class Card extends VerticalLayout {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff').setStyle(Style.Key.BORDER, '1px solid #e2e8f0').setStyle(Style.Key.BORDER_RADIUS, '12px').setStyle(Style.Key.PADDING, '16px');
+        }
+    }
+
+    function decodeEscapedText(value) {
+        const text = String(value ?? '');
+        if (!text) return '';
+        return text
+            .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+            .replace(/\\r/g, '\r')
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\/g, '\\');
+    }
+
+    function safeJson(raw) {
+        if (raw == null) return 'null';
+        if (typeof raw === 'object') return JSON.stringify(raw, null, 2);
+        const normalized = decodeEscapedText(raw).trim();
+        if (!normalized) return '';
+        try { return JSON.stringify(JSON.parse(normalized), null, 2); } catch (_) { return normalized; }
+    }
+
+    function tryParseJson(raw) {
+        if (raw == null) return null;
+        if (typeof raw === 'object') return raw;
+        const normalized = decodeEscapedText(raw).trim();
+        if (!normalized) return null;
+        try { return JSON.parse(normalized); } catch (_) { return null; }
+    }
+
+    function isEmptyObject(value) {
+        return value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0;
+    }
+
+    function parseStructuredPayload(textValue) {
+        const text = decodeEscapedText(textValue);
+        const headerKey = 'Headers:\n';
+        const bodyKey = '\n\nBody:\n';
+
+        if (!text.includes(headerKey) || !text.includes(bodyKey)) {
+            const rawObj = tryParseJson(text);
+            const isMultipart = rawObj && rawObj.type === 'multipart/form-data';
+            return {
+                headers: '',
+                body: safeJson(text),
+                file: isMultipart ? safeJson(rawObj.file ?? null) : '',
+                form: isMultipart ? (isEmptyObject(rawObj.form) ? '' : safeJson(rawObj.form ?? null)) : ''
+            };
+        }
+
+        const headerStart = text.indexOf(headerKey) + headerKey.length;
+        const bodyStart = text.indexOf(bodyKey);
+        const headersText = text.substring(headerStart, bodyStart).trim();
+        const bodyText = text.substring(bodyStart + bodyKey.length).trim();
+        const bodyObject = tryParseJson(bodyText);
+        const isMultipart = bodyObject && bodyObject.type === 'multipart/form-data';
+
+        return {
+            headers: safeJson(headersText),
+            body: safeJson(bodyText),
+            file: isMultipart ? safeJson(bodyObject.file ?? null) : '',
+            form: isMultipart ? (isEmptyObject(bodyObject.form) ? '' : safeJson(bodyObject.form ?? null)) : ''
+        };
+    }
+
+    function extractStatusCode(statusText) {
+        const match = String(statusText || '').match(/^(\d+)/);
+        return match ? Number(match[1]) : 0;
+    }
+
+    function extractDurationMs(statusText) {
+        const match = String(statusText || '').match(/\((\d+)\s*ms\)/i);
+        return match ? Number(match[1]) : 0;
+    }
+
+    function statusPill(code, ok) {
+        return new Div()
+            .setText(String(code || 'NA'))
+            .setStyle(Style.Key.DISPLAY, 'inline-block')
+            .setStyle(Style.Key.PADDING, '2px 8px')
+            .setStyle(Style.Key.BORDER_RADIUS, '999px')
+            .setStyle(Style.Key.FONT_SIZE, '11px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.BACKGROUND_COLOR, ok ? '#dcfce7' : '#fee2e2')
+            .setStyle(Style.Key.COLOR, ok ? '#166534' : '#991b1b');
+    }
+
+    function methodPill(method) {
+        const normalized = String(method || 'NA').toUpperCase();
+        const palette = {
+            GET: ['#dbeafe', '#1e40af'],
+            POST: ['#dcfce7', '#166534'],
+            PUT: ['#fef3c7', '#92400e'],
+            PATCH: ['#ede9fe', '#5b21b6'],
+            DELETE: ['#fee2e2', '#991b1b']
+        };
+        const [bg, fg] = palette[normalized] || ['#e2e8f0', '#334155'];
+
+        return new Div()
+            .setText(normalized)
+            .setStyle(Style.Key.DISPLAY, 'inline-block')
+            .setStyle(Style.Key.PADDING, '2px 8px')
+            .setStyle(Style.Key.BORDER_RADIUS, '6px')
+            .setStyle(Style.Key.FONT_SIZE, '11px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.BACKGROUND_COLOR, bg)
+            .setStyle(Style.Key.COLOR, fg);
+    }
+
+    function codeBlock(text) {
+        return new Pre()
+            .setText(text || '')
+            .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+            .setStyle(Style.Key.BORDER, '1px solid #dbe3ee')
+            .setStyle(Style.Key.BORDER_RADIUS, '8px')
+            .setStyle(Style.Key.PADDING, '10px')
+            .setStyle(Style.Key.FONT_SIZE, '12px')
+            .setStyle(Style.Key.COLOR, '#0f172a')
+            .setStyle(Style.Key.OVERFLOW, 'auto');
+    }
+
+    function sectionTitle(text) {
+        return new Div()
+            .setText(text)
+            .setStyle(Style.Key.FONT_SIZE, '12px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.COLOR, '#334155')
+            .setStyle(Style.Key.MARGIN_BOTTOM, '6px');
+    }
+
+    const data = {
+  "title": "Pharmacy: Pharmacy Upload Prescription Journey",
+  "environment": "UAT",
+  "timestamp": "2026-03-10 10:03:44.204",
+  "summary": {
+    "currentStep": "11. place-order",
+    "passed": 11,
+    "totalFlowSteps": 11,
+    "failed": 0,
+    "total": 11,
+    "totalExecutionTimeInMillis": 22328
+  },
+  "steps": [
+    {
+      "name": "1. add-multiple-files",
+      "method": "POST",
+      "status": "200 (464 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/digitisation/add-multiple-files",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"multipart/form-data\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n{\"type\":\"multipart/form-data\",\"file\":{\"fieldName\":\"file\",\"filePath\":\"target/test-artifacts/final_prescription.pdf\",\"absoluteFilePath\":\"/Users/sharadrakeshmaddheshiya/Desktop/visit-health-api-automation/target/test-artifacts/final_prescription.pdf\",\"exists\":true,\"fileName\":\"final_prescription.pdf\",\"fileSizeBytes\":647},\"form\":{}}",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"51\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:22 GMT\",\n  \"etag\": \"W/\\\"33-D2vndimpZ4SEHjVMFiJF9Yjb1vA\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"pharmacyPrescriptionId\":8036}"
+    },
+    {
+      "name": "2. upload-prescription",
+      "method": "GET",
+      "status": "200 (101 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/digitisation/upload-prescription",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"2181\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:22 GMT\",\n  \"etag\": \"W/\\\"885-PY/UAXEgsEl3eU3XQ9F9/2IYcM0\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"pharmacyPrescriptionId\":8036,\"previewFiles\":[{\"fileId\":993601,\"fileType\":\"pdf\",\"fileUrl\":\"https://api.getvisitapp.net/thunder/medicine-delivery/v2/1002274/get-prescription/f855cc02d6da288f32df54fbbaff191d.pdf\"}],\"samplePrescription\":\"https://visit-public-stage.s3.ap-south-1.amazonaws.com/pharmacy/samplePrescription.png\",\"FAQ\":[{\"question\":\"Why do I need to upload prescription ?\",\"answer\":\"As per the goverment some medicines can’t be ordered without a valid prescription\"},{\"question\":\"How much time transcription take ?\",\"answer\":\"A certified doctor will be assigned to transcribe your prescription and usually takes 3hrs-4hrs depending on the indian standard time.\"},{\"question\":\"How long is my prescription valid?\",\"answer\":\"Your prescription is valid as per the duration mentioned by doctor, or if duration is not mentioned, then your prescription is valid for 15 days for acute illness and 6 months for chronic illness\"}],\"guidelines\":[{\"title\":\"Patient Details\",\"fileUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/Patient+Details.png\",\"description\":\"Make sure your name, age, and date of birth are correct.\"},{\"title\":\"Prescription Date\",\"fileUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/Prescription+Date.png\",\"description\":\"The date should be mentioned properly in the prescription.\"},{\"title\":\"Symptoms\",\"fileUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/Symptoms.png\",\"description\":\"Ensure your prescription includes the chief complaint or symptoms.\"},{\"title\":\"Primary Diagnosis\",\"fileUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/Primary+Diagnosis.png\",\"description\":\"Make sure the possible diagnosis  is mentioned in the prescription.\"},{\"title\":\"Medication Details\",\"fileUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/Medication+Details.png\",\"description\":\"Include clear information about each medicine, like the salt name, dosage, and duration for medication.\"},{\"title\":\"Doctor's Information\",\"fileUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/Dr+Info.png\",\"description\":\"Have the doctor's name, signature, and contact details.\"}]}"
+    },
+    {
+      "name": "3. cart-addresses",
+      "method": "GET",
+      "status": "200 (104 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/cart/addresses",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"1105\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:22 GMT\",\n  \"etag\": \"W/\\\"451-P1CpEbT/EN9yW6xcM5pyZPJ2r2o\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"addresses\":[{\"addressId\":6348,\"title\":\"Home\",\"lat\":28.4776193,\"long\":77.0810685,\"isLocationUpdated\":true,\"address\":\"Gurugram, Haryana, India\",\"pincode\":201301,\"locality\":\"Gurugram\",\"city\":\"Noida\",\"state\":\"UTTAR PRADESH\",\"isServiceable\":true,\"serviceablePartners\":{},\"deliveryOptionMsg\":null},{\"addressId\":5899,\"title\":\"Home\",\"lat\":28.498195179012235,\"long\":77.40901966289292,\"isLocationUpdated\":true,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"pincode\":201304,\"locality\":\"fafa\",\"city\":\"Noida\",\"state\":\"UTTAR PRADESH\",\"isServiceable\":true,\"serviceablePartners\":{},\"deliveryOptionMsg\":null},{\"addressId\":5813,\"title\":\"Home\",\"lat\":28.5681199,\"long\":77.31620029999999,\"isLocationUpdated\":true,\"address\":\"FC-12, Film City, Maharaja Agrasen Marg, Sector 16A, Noida, Uttar Pradesh, 201301, India\",\"pincode\":201301,\"locality\":\"Noida\",\"city\":\"Noida\",\"state\":\"UTTAR PRADESH\",\"isServiceable\":true,\"serviceablePartners\":{},\"deliveryOptionMsg\":null}],\"config\":{\"allowAddAddress\":true,\"allowEditAddress\":true,\"allowDeleteAddress\":true}}"
+    },
+    {
+      "name": "4. select-patient",
+      "method": "GET",
+      "status": "200 (355 ms)",
+      "ok": true,
+      "url": "https://api.samuraijack.xyz/latios/labs-v2/patients",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, token, transactionId, sessionId, agentId, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"1976\",\n  \"content-security-policy\": \"frame-ancestors *;default-src *;script-src * 'unsafe-inline';script-src-attr 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';form-action * 'unsafe-inline';base-uri 'self';block-all-mixed-content;upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:22 GMT\",\n  \"etag\": \"W/\\\"7b8-3/XHBcFPSNQ54N/SYrT+noeEvTA\\\"\",\n  \"expect-ct\": \"max-age=0\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=15552000; includeSubDomains\",\n  \"vary\": \"Accept-Encoding\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"patients\":[{\"patientId\":1441,\"name\":\"Abhineet\",\"gender\":\"Male\",\"phone\":\"9136186721\",\"age\":44,\"dateOfBirth\":\"1994-08-09\",\"relationId\":0,\"self\":1,\"relativeId\":null,\"sponsorId\":14,\"relationType\":\"Self\",\"relation3dIcon\":\"https://visit-public.s3.ap-south-1.amazonaws.com/icons/3d/husband.png\",\"policyId\":null,\"isPolicyActive\":0},{\"patientId\":2448,\"name\":\"Hari Bhargava\",\"gender\":\"Male\",\"phone\":\"9136186721\",\"age\":67,\"dateOfBirth\":\"1951-04-12\",\"relationId\":1,\"self\":0,\"relativeId\":2118,\"sponsorId\":14,\"relationType\":\"Father\",\"relation3dIcon\":\"https://visit-public.s3.ap-south-1.amazonaws.com/icons/3d/father.png\",\"policyId\":null,\"isPolicyActive\":0},{\"patientId\":2467,\"name\":\"Archana Bhargava\",\"gender\":\"Female\",\"phone\":\"9136186721\",\"age\":62,\"dateOfBirth\":\"1981-08-23\",\"relationId\":2,\"self\":0,\"relativeId\":2122,\"sponsorId\":14,\"relationType\":\"Mother\",\"relation3dIcon\":\"https://visit-public.s3.ap-south-1.amazonaws.com/icons/3d/mother.png\",\"policyId\":null,\"isPolicyActive\":0},{\"patientId\":13158,\"name\":\"Abhineet\",\"gender\":\"Male\",\"phone\":\"9136186721\",\"age\":44,\"dateOfBirth\":\"1999-12-17\",\"relationId\":0,\"self\":1,\"relativeId\":null,\"sponsorId\":14,\"relationType\":\"Self\",\"relation3dIcon\":\"https://visit-public.s3.ap-south-1.amazonaws.com/icons/3d/husband.png\",\"policyId\":null,\"isPolicyActive\":0},{\"patientId\":22126,\"name\":\"Rishi K Singh\",\"gender\":\"Male\",\"phone\":\"9876543212\",\"age\":28,\"dateOfBirth\":\"1997-01-01\",\"relationId\":39,\"self\":0,\"relativeId\":null,\"sponsorId\":14,\"relationType\":\"Brother In Law\",\"relation3dIcon\":\"https://visit-public.s3.ap-south-1.amazonaws.com/icons/3d/son.png\",\"policyId\":null,\"isPolicyActive\":0},{\"patientId\":22507,\"name\":\"Aashish Singh\",\"gender\":\"Male\",\"phone\":\"9988776655\",\"age\":27,\"dateOfBirth\":\"1998-11-02\",\"relationId\":7,\"self\":0,\"relativeId\":null,\"sponsorId\":14,\"relationType\":\"Friend\",\"relation3dIcon\":\"https://visit-public.s3.ap-south-1.amazonaws.com/icons/3d/son.png\",\"policyId\":null,\"isPolicyActive\":0}],\"skipPatientSelection\":false}"
+    },
+    {
+      "name": "5. submit-request",
+      "method": "POST",
+      "status": "200 (863 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/digitisation/submit-request",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n{\"pharmacyPrescriptionId\":8036,\"addressId\":6348,\"patientId\":1441}",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"263\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:23 GMT\",\n  \"etag\": \"W/\\\"107-AlJdAeUkMNdgi7PqjhCK7+i7jW4\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"heading\":\"Success!\\nYour wallet is exhausted. On confirmation from partner, this order will proceed as COD.\",\"showMessage\":\"Your prescription will be digitised in 3-4 hours \",\"digitisationId\":5080681,\"disclaimer\":null,\"showDisclaimer\":false}"
+    },
+    {
+      "name": "6. save-cart-items",
+      "method": "PUT",
+      "status": "200 (213 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/medicines/save/cartItems?v=50",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQyLCJwbGF0Zm9ybSI6IldFQiIsInVzZXJUeXBlIjoiZG9jdG9yIiwiaWF0IjoxNzczMTE3MjAwLCJleHAiOjE4MDQ2NTMyMDB9.ImGOHYwMMx-zGmDh72GIp6zjN_4iw3V0EVoea-pf7cQ\"\n}\\n\\nBody:\\n{\"cartItem\":{\"dimDrugMasterId\":397349,\"masterGroupItemCode\":653419136,\"name\":\"PAN IV 40MG INJECTION\",\"subMasterName\":null,\"digitisationId\":5080681,\"providers\":[{\"dimDrugId\":672233,\"partnerId\":1,\"name\":\"PAN IV 40MG INJECTION\",\"isAvailable\":1,\"genericName\":\"PAN IV 40MG INJECTION\",\"dosage\":\"1-0-0: once a day in the morning\",\"prescribedQuantity\":null,\"duration\":\"30\",\"durationType\":\"Days\",\"meal\":\"After\",\"notes\":\"\",\"coveredUnderOpd\":1,\"isSubstitute\":0}]}}",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"551\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:23 GMT\",\n  \"etag\": \"W/\\\"227-wSeT3kFjYZ7Cd7OcKPOlQPsRUF4\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n[{\"id\":13056,\"s_pack_size\":1,\"digitisation_request_id\":5080681,\"name\":\"PAN IV 40MG INJECTION\",\"generic_name\":\"PAN IV 40MG INJECTION\",\"dosage\":\"1-0-0\",\"duration\":30,\"duration_type\":\"Days\",\"meal\":\"After\",\"notes\":\"\",\"is_covered\":1,\"dim_drug_id\":672233,\"prescribed_quantity\":null,\"prescribed_drug_name\":\"PAN IV 40MG INJECTION\",\"is_substitute\":0,\"prescribed_drug_id\":null,\"ph_partner_id\":1,\"master_group_item_code\":\"653419136\",\"master_group_name\":\"PAN IV 40MG INJECTION\",\"is_available\":1,\"dim_drugs_master_id\":397349,\"max_quantity\":30,\"cart_item_id\":null}]"
+    },
+    {
+      "name": "7. mark-digitised",
+      "method": "POST",
+      "status": "200 (9516 ms)",
+      "ok": true,
+      "url": "https://api.samuraijack.xyz/latios/digitisations/requests/mark-digitised?v=50",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQyLCJwbGF0Zm9ybSI6IldFQiIsInVzZXJUeXBlIjoiZG9jdG9yIiwiaWF0IjoxNzczMTE3MjAwLCJleHAiOjE4MDQ2NTMyMDB9.ImGOHYwMMx-zGmDh72GIp6zjN_4iw3V0EVoea-pf7cQ\"\n}\\n\\nBody:\\n{\"action\":\"complete\",\"digitisationId\":5080681,\"appointmentDate\":\"2026-03-04\",\"prescriptionValidityDate\":\"2026-03-31\",\"doctorName\":\"Dr. S. Manoharan\",\"centerName\":\"S. V. Clinic\",\"centerAddress\":\"85 S.V.S.G Cottage 5th Main Road Kaviarasu Kannadasan Nagar Vyasarpadi Landmark: Near Dena Bank, Chennai\",\"consultationId\":null,\"doctorId\":134473,\"centerId\":113003,\"verticalId\":3,\"practiceId\":84622,\"diagnosis\":\"Maternal care for anti-D [Rh] antibodies, first trimester, fetus 3 - O36.0113 - O36.0113\",\"diagnosisSource\":true,\"symptoms\":null,\"isCritical\":0,\"icdCode\":\"O36.0113\",\"secondaryDiagnosis\":\"Karyotype 45, X - Q96.0 - Q96.0\",\"secondaryDiagnosisIcdCode\":\"Q96.0\",\"blockerConsultationId\":null,\"commonDigitisationId\":null,\"exceptionalAdditionReason\":null,\"googlePlace\":null,\"addedMedicines\":[],\"qcStatus\":0,\"startedAt\":1772622401614,\"stepOneCompletedAt\":1772622432081,\"aiAssisted\":false,\"isPatientManuallySelected\":true}",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, token, transactionId, sessionId, agentId, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"21\",\n  \"content-security-policy\": \"frame-ancestors *;default-src *;script-src * 'unsafe-inline';script-src-attr 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';form-action * 'unsafe-inline';base-uri 'self';block-all-mixed-content;upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:33 GMT\",\n  \"etag\": \"W/\\\"15-ga8EF/lp+ThIsc8w/OHbk4hPrME\\\"\",\n  \"expect-ct\": \"max-age=0\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=15552000; includeSubDomains\",\n  \"vary\": \"Accept-Encoding\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\"}"
+    },
+    {
+      "name": "8. dashboard",
+      "method": "GET",
+      "status": "200 (1056 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/newDashboard?version=1800009616",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"48823\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:34 GMT\",\n  \"etag\": \"W/\\\"beb7-NfKF4AbNRpAgUmQAEhTrPYVy7Hs\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"sections\":[{\"wallet\":[{\"pharmacy\":{\"totalBalance\":0,\"newconsumedAmount\":0,\"message\":\"If wallet balance is low, copayment will be collected on delivery.\"}}]},{\"title\":\"Ongoing Orders\",\"sectionType\":\"order\",\"card\":[{\"headingText\":\"Select Pharmacy Partner\",\"text\":\"Please select your pharmacy partner to proceed with your order\",\"orderStatus\":\"select-partner\",\"cartId\":982457,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"prescribedTime\":\"4th, Mar\",\"drugName\":\"PAN 40MG  INJ\",\"digitisationId\":5080681,\"createdAtOriginal\":\"2026-03-10T10:03:29.000Z\",\"dateTime\":\"10:03AM, 10th Mar 2026\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnersLogo\":[\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\"],\"logo\":true,\"prescriptionValidity\":null},{\"transactionId\":8598,\"digitisationId\":5080679,\"criticalOrder\":null,\"cartId\":982456,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"09:52AM, 10th Mar 2026\",\"placedOn\":\"09:52AM, 10th Mar 2026\",\"createdAtOriginal\":\"2026-03-10T09:52:46.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"1350.00\",\"showCarts\":1,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"09:52AM, 10th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63444,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8597,\"digitisationId\":5080677,\"criticalOrder\":null,\"cartId\":982455,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"09:46AM, 10th Mar 2026\",\"placedOn\":\"09:46AM, 10th Mar 2026\",\"createdAtOriginal\":\"2026-03-10T09:46:10.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"1350.00\",\"showCarts\":1,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"09:46AM, 10th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63443,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8596,\"digitisationId\":5080675,\"criticalOrder\":null,\"cartId\":982454,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"09:36AM, 10th Mar 2026\",\"placedOn\":\"09:36AM, 10th Mar 2026\",\"createdAtOriginal\":\"2026-03-10T09:36:33.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"1350.00\",\"showCarts\":1,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"09:36AM, 10th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63442,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8595,\"digitisationId\":5080673,\"criticalOrder\":null,\"cartId\":982453,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"09:32AM, 10th Mar 2026\",\"placedOn\":\"09:32AM, 10th Mar 2026\",\"createdAtOriginal\":\"2026-03-10T09:32:01.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"1350.00\",\"showCarts\":1,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"09:32AM, 10th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63441,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8594,\"digitisationId\":5080671,\"criticalOrder\":null,\"cartId\":982452,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"09:26AM, 10th Mar 2026\",\"placedOn\":\"09:26AM, 10th Mar 2026\",\"createdAtOriginal\":\"2026-03-10T09:26:43.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"1350.00\",\"showCarts\":1,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"09:26AM, 10th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63440,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8593,\"digitisationId\":5080669,\"criticalOrder\":null,\"cartId\":982451,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"07:55AM, 10th Mar 2026\",\"placedOn\":\"07:55AM, 10th Mar 2026\",\"createdAtOriginal\":\"2026-03-10T07:55:52.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"1350.00\",\"showCarts\":1,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"07:55AM, 10th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63439,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8584,\"digitisationId\":5080603,\"criticalOrder\":null,\"cartId\":982414,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"06:06PM, 7th Mar 2026\",\"placedOn\":\"06:06PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T18:06:54.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"06:06PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63430,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"headingText\":\"Select Pharmacy Partner\",\"text\":\"Please select your pharmacy partner to proceed with your order\",\"orderStatus\":\"select-partner\",\"cartId\":982413,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"prescribedTime\":\"4th, Mar\",\"drugName\":\"PAN 40MG  INJ\",\"digitisationId\":5080601,\"createdAtOriginal\":\"2026-03-07T17:23:49.000Z\",\"dateTime\":\"05:23PM, 7th Mar 2026\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnersLogo\":[\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\"],\"logo\":true,\"prescriptionValidity\":null},{\"transactionId\":8583,\"digitisationId\":5080599,\"criticalOrder\":null,\"cartId\":982412,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"05:22PM, 7th Mar 2026\",\"placedOn\":\"05:22PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T17:22:38.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"05:22PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63429,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8582,\"digitisationId\":5080597,\"criticalOrder\":null,\"cartId\":982411,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"05:21PM, 7th Mar 2026\",\"placedOn\":\"05:21PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T17:21:36.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"05:21PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63428,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8581,\"digitisationId\":5080595,\"criticalOrder\":null,\"cartId\":982410,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"05:19PM, 7th Mar 2026\",\"placedOn\":\"05:19PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T17:19:29.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"05:19PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63427,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8580,\"digitisationId\":5080593,\"criticalOrder\":null,\"cartId\":982409,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"05:17PM, 7th Mar 2026\",\"placedOn\":\"05:17PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T17:17:50.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"05:17PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63426,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8579,\"digitisationId\":5080591,\"criticalOrder\":null,\"cartId\":982408,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"04:59PM, 7th Mar 2026\",\"placedOn\":\"04:59PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T16:59:51.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"04:59PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63425,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8578,\"digitisationId\":5080589,\"criticalOrder\":null,\"cartId\":982407,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"04:56PM, 7th Mar 2026\",\"placedOn\":\"04:56PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T16:56:44.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"04:56PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63424,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8577,\"digitisationId\":5080583,\"criticalOrder\":null,\"cartId\":982406,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"04:28PM, 7th Mar 2026\",\"placedOn\":\"04:28PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T16:28:33.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"04:28PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63423,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8576,\"digitisationId\":5080580,\"criticalOrder\":null,\"cartId\":982405,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"04:24PM, 7th Mar 2026\",\"placedOn\":\"04:24PM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T16:24:33.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"04:24PM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63422,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8575,\"digitisationId\":5080579,\"criticalOrder\":null,\"cartId\":982404,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:19AM, 7th Mar 2026\",\"placedOn\":\"11:19AM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T11:19:50.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:19AM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63421,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8574,\"digitisationId\":5080576,\"criticalOrder\":null,\"cartId\":982403,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:09AM, 7th Mar 2026\",\"placedOn\":\"11:09AM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T11:09:54.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:09AM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63420,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8573,\"digitisationId\":5080572,\"criticalOrder\":null,\"cartId\":982402,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"06:05AM, 7th Mar 2026\",\"placedOn\":\"06:05AM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T06:05:21.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"06:05AM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63419,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"headingText\":\"Select Pharmacy Partner\",\"text\":\"Please select your pharmacy partner to proceed with your order\",\"orderStatus\":\"select-partner\",\"cartId\":982401,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"prescribedTime\":\"4th, Mar\",\"drugName\":\"PAN 40MG  INJ\",\"digitisationId\":5080570,\"createdAtOriginal\":\"2026-03-07T05:58:58.000Z\",\"dateTime\":\"05:58AM, 7th Mar 2026\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnersLogo\":[\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\"],\"logo\":true,\"prescriptionValidity\":null},{\"transactionId\":8572,\"digitisationId\":5080569,\"criticalOrder\":null,\"cartId\":982400,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"12:02AM, 7th Mar 2026\",\"placedOn\":\"12:02AM, 7th Mar 2026\",\"createdAtOriginal\":\"2026-03-07T00:02:46.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"12:02AM, 7th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63418,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8571,\"digitisationId\":5080567,\"criticalOrder\":null,\"cartId\":982399,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:59PM, 6th Mar 2026\",\"placedOn\":\"11:59PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:59:37.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:59PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63417,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8570,\"digitisationId\":5080565,\"criticalOrder\":null,\"cartId\":982398,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:57PM, 6th Mar 2026\",\"placedOn\":\"11:57PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:57:21.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:57PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63416,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8569,\"digitisationId\":5080563,\"criticalOrder\":null,\"cartId\":982397,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:55PM, 6th Mar 2026\",\"placedOn\":\"11:55PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:55:37.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:55PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63415,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8568,\"digitisationId\":5080561,\"criticalOrder\":null,\"cartId\":982396,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:43PM, 6th Mar 2026\",\"placedOn\":\"11:43PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:43:45.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:43PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63414,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8567,\"digitisationId\":5080559,\"criticalOrder\":null,\"cartId\":982395,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:36PM, 6th Mar 2026\",\"placedOn\":\"11:36PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:36:08.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:36PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63413,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8566,\"digitisationId\":5080557,\"criticalOrder\":null,\"cartId\":982394,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:27PM, 6th Mar 2026\",\"placedOn\":\"11:27PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:27:56.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:27PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63412,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8565,\"digitisationId\":5080555,\"criticalOrder\":null,\"cartId\":982393,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:26PM, 6th Mar 2026\",\"placedOn\":\"11:26PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:26:53.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:26PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63411,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8564,\"digitisationId\":5080553,\"criticalOrder\":null,\"cartId\":982392,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:16PM, 6th Mar 2026\",\"placedOn\":\"11:16PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:16:35.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:16PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63410,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8563,\"digitisationId\":5080551,\"criticalOrder\":null,\"cartId\":982391,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:08PM, 6th Mar 2026\",\"placedOn\":\"11:08PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:08:46.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:08PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63409,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8562,\"digitisationId\":5080549,\"criticalOrder\":null,\"cartId\":982390,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:06PM, 6th Mar 2026\",\"placedOn\":\"11:06PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:06:03.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:06PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63408,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8561,\"digitisationId\":5080547,\"criticalOrder\":null,\"cartId\":982389,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"11:02PM, 6th Mar 2026\",\"placedOn\":\"11:02PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T23:02:16.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"11:02PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63407,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8560,\"digitisationId\":5080545,\"criticalOrder\":null,\"cartId\":982388,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:59PM, 6th Mar 2026\",\"placedOn\":\"10:59PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:59:43.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:59PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63406,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8559,\"digitisationId\":5080543,\"criticalOrder\":null,\"cartId\":982387,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:54PM, 6th Mar 2026\",\"placedOn\":\"10:54PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:54:16.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:54PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63405,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8558,\"digitisationId\":5080541,\"criticalOrder\":null,\"cartId\":982386,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:51PM, 6th Mar 2026\",\"placedOn\":\"10:51PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:51:02.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:51PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63404,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8557,\"digitisationId\":5080539,\"criticalOrder\":null,\"cartId\":982385,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:40PM, 6th Mar 2026\",\"placedOn\":\"10:40PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:40:27.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:40PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63403,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8556,\"digitisationId\":5080536,\"criticalOrder\":null,\"cartId\":982384,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:33PM, 6th Mar 2026\",\"placedOn\":\"10:33PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:33:29.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:33PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63402,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8555,\"digitisationId\":5080533,\"criticalOrder\":null,\"cartId\":982383,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:26PM, 6th Mar 2026\",\"placedOn\":\"10:26PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:26:49.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:26PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63401,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8554,\"digitisationId\":5080531,\"criticalOrder\":null,\"cartId\":982382,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:18PM, 6th Mar 2026\",\"placedOn\":\"10:18PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:18:42.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:18PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63400,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8553,\"digitisationId\":5080529,\"criticalOrder\":null,\"cartId\":982381,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:15PM, 6th Mar 2026\",\"placedOn\":\"10:15PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:15:44.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:15PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63399,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8552,\"digitisationId\":5080527,\"criticalOrder\":null,\"cartId\":982380,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:14PM, 6th Mar 2026\",\"placedOn\":\"10:14PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:14:28.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":5899,\"address\":\"Shop No-5, Tower- O, Golden Palm Society Rd, Sector 168, Noida, Uttar Pradesh 201304, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:14PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63398,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8551,\"digitisationId\":5080525,\"criticalOrder\":null,\"cartId\":982379,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:12PM, 6th Mar 2026\",\"placedOn\":\"10:12PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:12:10.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:12PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63397,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8550,\"digitisationId\":5080523,\"criticalOrder\":null,\"cartId\":982378,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"10:10PM, 6th Mar 2026\",\"placedOn\":\"10:10PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T22:10:02.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"10:10PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63396,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"transactionId\":8549,\"digitisationId\":5080521,\"criticalOrder\":null,\"cartId\":982377,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"09:59PM, 6th Mar 2026\",\"placedOn\":\"09:59PM, 6th Mar 2026\",\"createdAtOriginal\":\"2026-03-06T21:59:00.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"cod\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":6348,\"address\":\"Gurugram, Haryana, India\",\"storeLat\":28.567,\"storeLong\":77.321,\"cancelReason\":null,\"amount\":\"2700.00\",\"showCarts\":0,\"doctorName\":\"Dr. S. Manoharan\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"09:59PM, 6th Mar 2026\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":63395,\"drugID\":\"672233\",\"drugName\":\"PAN 40MG  INJ\"},{\"headingText\":\"Select Pharmacy Partner\",\"text\":\"Please select your pharmacy partner to proceed with your order\",\"orderStatus\":\"select-partner\",\"cartId\":982372,\"doctorName\":\"Dr. K K Aggarwal\",\"patientName\":\"Abhineet\",\"prescribedTime\":\"6th, Mar\",\"drugName\":\"PAN 40MG  INJ\",\"digitisationId\":5080517,\"createdAtOriginal\":\"2026-03-06T21:28:13.000Z\",\"dateTime\":\"09:28PM, 6th Mar 2026\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnersLogo\":[\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\",\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/PillUpLogo.png\",\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/evital.png\",\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/pharmeasy_logo.png\",\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/1mg-logo.png\"],\"logo\":true,\"prescriptionValidity\":null},{\"cardType\":\"transcribing\",\"title\":\"Prescription Delayed\",\"statusMessage\":\"Digitizing\",\"digitisationId\":5080408,\"prescribedTime\":\"11:33AM, 5th, Mar\",\"createdAtOriginal\":\"2026-03-05T11:33:49.000Z\",\"status\":\"Delayed\",\"text\":\"The transcription will take around 3-4 hours \"},{\"cardType\":\"transcribing\",\"title\":\"Prescription Delayed\",\"statusMessage\":\"Digitizing\",\"digitisationId\":5080406,\"prescribedTime\":\"11:30AM, 5th, Mar\",\"createdAtOriginal\":\"2026-03-05T11:30:28.000Z\",\"status\":\"Delayed\",\"text\":\"The transcription will take around 3-4 hours \"},{\"cardType\":\"transcribing\",\"title\":\"Prescription Delayed\",\"statusMessage\":\"Digitizing\",\"digitisationId\":5080404,\"prescribedTime\":\"11:24AM, 5th, Mar\",\"createdAtOriginal\":\"2026-03-05T11:24:46.000Z\",\"status\":\"Delayed\",\"text\":\"The transcription will take around 3-4 hours \"},{\"cardType\":\"transcribing\",\"title\":\"Prescription Delayed\",\"statusMessage\":\"Digitizing\",\"digitisationId\":5080401,\"prescribedTime\":\"10:18AM, 5th, Mar\",\"createdAtOriginal\":\"2026-03-05T10:18:02.000Z\",\"status\":\"Delayed\",\"text\":\"The transcription will take around 3-4 hours \"},{\"transactionId\":1550,\"digitisationId\":2754,\"criticalOrder\":null,\"cartId\":1155,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"01:42PM, 12th Dec 2022\",\"placedOn\":\"01:42PM, 12th Dec 2022\",\"createdAtOriginal\":\"2022-12-12T13:42:10.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"full-credit\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":\"12th Jun 2024\",\"addressId\":958,\"address\":\"New Noida Address\",\"storeLat\":null,\"storeLong\":null,\"cancelReason\":null,\"amount\":0,\"showCarts\":0,\"doctorName\":\"Ritu Singh\",\"patientName\":\"Abhineet\",\"orderStatus\":\"confirmed\",\"dateTime\":\"01:42PM, 12th Dec 2022\",\"headingText\":\"Partner Confirmed\",\"text\":\"Your order is on the way and should arrive at your doorstep shortly!\",\"toolTip\":\"\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":1339,\"drugID\":\"654645,672234,676003\",\"drugName\":\"AUGMENTIN DUO 625MG TAB 10'S,PAN 40MG TAB 15's,SILVEREX IONIC GEL 20G\"},{\"transactionId\":1548,\"digitisationId\":2750,\"criticalOrder\":null,\"cartId\":1150,\"sourceType\":\"uploaded-prescription\",\"createdAt\":\"01:24PM, 12th Dec 2022\",\"placedOn\":\"01:24PM, 12th Dec 2022\",\"createdAtOriginal\":\"2022-12-12T13:24:32.000Z\",\"cancel_reason_code\":null,\"orderDeliveryType\":\"home-delivery\",\"orderType\":\"mix-credit\",\"cancelled_on\":null,\"delivered_on\":null,\"subOrderCount\":0,\"minDeliveryDate\":null,\"deliveryDate\":null,\"addressId\":769,\"address\":\"noida\",\"storeLat\":null,\"storeLong\":null,\"cancelReason\":null,\"amount\":\"65.00\",\"showCarts\":0,\"doctorName\":\"Ritu Singh\",\"patientName\":\"Abhineet\",\"orderStatus\":\"placed\",\"dateTime\":\"01:24PM, 12th Dec 2022\",\"headingText\":\"Pay at Delivery\",\"text\":\"Please pay the remaining amount to our partner at the time of delivery.\",\"toolTip\":\"Copay is applicable when your wallet balance is not sufficient to cover the appointment charges\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"orderId\":1337,\"drugID\":\"654645,672234,676003\",\"drugName\":\"AUGMENTIN DUO 625MG TAB 10'S,PAN 40MG TAB 15's,SILVEREX IONIC GEL 20G\"}]},{\"title\":\"Consultation Requests\",\"sectionType\":\"consultation-requests\",\"card\":[]}],\"address\":1,\"header\":{\"uploadLayoutHeaderText\":\"Top Pharmacies,\\nExclusive Discounts. \\n\\nOrder Now.\",\"medicineImageUrl\":\"https://visit-public.s3.ap-south-1.amazonaws.com/MEDICINE.png\"},\"teleConsultation\":null,\"showRxUploadOption\":true,\"showExitingRxUploadOption\":true,\"isTataAIA\":false,\"showSearchAndBook\":true,\"isPolicyHolder\":true}"
+    },
+    {
+      "name": "9. carts",
+      "method": "GET",
+      "status": "200 (868 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/carts?digitisationRequestId=5080681&isReOrderCart=0",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"2196\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:35 GMT\",\n  \"etag\": \"W/\\\"894-AQYBmyYCppYGBrxmU1Yv1jrpSEc\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"carts\":[{\"cartId\":982457,\"availableMedsCount\":1,\"medicines\":[{\"cartId\":982457,\"drugId\":672233,\"cartItemId\":15919,\"brandName\":\"PAN 40MG  INJ\",\"partnerItemCode\":\"PAN0060\",\"packSize\":1,\"quantity\":15,\"minQuantity\":null,\"maxQuantity\":15,\"actualMaxQuantity\":30,\"maxPackQuantity\":15,\"dimDrugsMrp\":\"100.00\",\"mrp\":100,\"cost\":1500,\"prescribedDrugName\":null,\"masterGroupName\":\"PAN IV 40MG INJECTION\",\"dimDrugsMasterId\":397349,\"totalAmount\":null,\"isCritical\":0,\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnerLogo\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\",\"digitisationId\":5080681,\"isSubstitute\":0,\"isSubstituteAdded\":null,\"isAvailable\":1,\"isCovered\":1,\"digitisationDrugId\":13056,\"dosage\":\"1-0-0\",\"duration\":30,\"durationType\":\"Days\",\"prescribedQuantity\":null,\"isNotified\":0,\"rxRequired\":1,\"masterItemCode\":\"ApolloPAN0060\",\"drugImage\":\"https://web.getvisitapp.com/static/media/MedicineDelivery.5f01b9f0.svg\",\"drugType\":\"PHARMA\",\"discountedPrice\":null,\"dimDrugMasterId\":397349,\"isNotifyCart\":null}],\"isStarBoot15DaysBottomSheetRequired\":false,\"partnerName\":\"Apollo\",\"partnerId\":1,\"partnerAdBanner\":null,\"aspectRatio\":\"600 : 202\",\"partnerLogo\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\",\"orderType\":\"cod\",\"orderSubTotal\":1500,\"deliveryCharge\":0,\"orderDiscount\":150,\"totalAmount\":1350,\"walletDiscount\":0,\"userPay\":1350,\"partnerTat\":0,\"expectedTatText\":null,\"hasLowestTat\":true,\"preSelected\":true,\"disclaimer\":\"Stock availability may vary, delivery could take longer than usual.\"}],\"starBoot15DaysBottomSheet\":{\"header\":\"Before You Continue\",\"points\":[\"More than 15 days of prescribed medicines found. As per policy, you can order up to 15 days at once.\",\"The remaining medicines will be saved and can be ordered after this order is delivered.\"],\"images\":{\"banner\":\"https://visit-public.s3.ap-south-1.amazonaws.com/STAR-15-DAYS-BOTTOM.png\"},\"buttons\":{\"continue\":\"Continue\"}},\"isScanAndPayAllowed\":false,\"isScanAndPayPostScanFlow\":false,\"scanAndPayTexts\":{\"payButtonText\":\"Scan & Pay Now\",\"text1\":\"Missing Some Medicines?\",\"text2\":\"Scan & Pay at Any Pharmacy With Visit.\",\"text3\":\"Exclusively for This Order\"},\"disclaimer\":[]}"
+    },
+    {
+      "name": "10. select-cart",
+      "method": "GET",
+      "status": "200 (1422 ms)",
+      "ok": true,
+      "url": "https://api.getvisitapp.net/absol/cart/prescription/cartId/982457",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"content-length\": \"3195\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"application/json; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:36 GMT\",\n  \"etag\": \"W/\\\"c7b-XUNmlTcnW4xM9OpmAhp50nYhhx8\\\"\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"server\": \"Apache\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n{\"message\":\"success\",\"data\":[{\"cartId\":982457,\"drugId\":672233,\"cartItemId\":15919,\"brandName\":\"PAN 40MG  INJ\",\"partnerItemCode\":\"PAN0060\",\"packSize\":1,\"quantity\":15,\"minQuantity\":null,\"maxQuantity\":15,\"actualMaxQuantity\":30,\"maxPackQuantity\":15,\"dimDrugsMrp\":\"100.00\",\"mrp\":100,\"cost\":1500,\"prescribedDrugName\":null,\"masterGroupName\":\"PAN IV 40MG INJECTION\",\"dimDrugsMasterId\":397349,\"totalAmount\":\"1350.00\",\"isCritical\":0,\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnerLogo\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\",\"digitisationId\":5080681,\"isSubstitute\":0,\"isSubstituteAdded\":null,\"isAvailable\":1,\"isCovered\":1,\"digitisationDrugId\":13056,\"dosage\":\"1-0-0\",\"duration\":30,\"durationType\":\"Days\",\"prescribedQuantity\":null,\"isNotified\":0,\"rxRequired\":1,\"masterItemCode\":\"ApolloPAN0060\",\"drugImage\":\"https://web.getvisitapp.com/static/media/MedicineDelivery.5f01b9f0.svg\",\"drugType\":\"PHARMA\",\"discountedPrice\":\"90.00\",\"dimDrugMasterId\":397349,\"isNotifyCart\":null}],\"cartId\":\"982457\",\"partnerId\":1,\"partnerName\":\"Apollo\",\"partnerLogo\":\"https://visit-public.s3.ap-south-1.amazonaws.com/pharmacy/apollo-logo.png\",\"patient\":{\"patientName\":\"Abhineet\",\"userId\":1002274,\"sponsorId\":14,\"relativeId\":null},\"prescriptionFile\":[{\"prescriptionFileUrl\":\"https://visit-data-stage.s3.ap-south-1.amazonaws.com/service-digitisations/5080681/digitisation-5080681-1773117205.pdf\",\"relativeId\":null}],\"address\":[{\"addressId\":6348,\"title\":\"Home\",\"address\":\"Gurugram, Haryana, India\",\"city\":null,\"locality\":\"Gurugram\",\"pincode\":201301,\"latitude\":28.4776193,\"longitude\":77.0810685}],\"isHomeDeliveryAvailable\":true,\"pickUpStores\":[{\"distance\":2130,\"partnerStoreId\":11037,\"address\":\"Gurgaon, Qutub Plaza\",\"pincode\":122002,\"workingHours\":null,\"apolloStateCode\":null,\"storeName\":\"Gurgaon, Qutub Plaza\",\"phone\":null,\"orderDeliveryType\":\"pick-up\",\"partnerId\":1,\"city\":\"Delhi-NCR\"},{\"distance\":3430,\"partnerStoreId\":11046,\"address\":\"I. DELHI NCR\",\"pincode\":122002,\"workingHours\":null,\"apolloStateCode\":null,\"storeName\":\"GURGAON SECTOR - 14\",\"phone\":null,\"orderDeliveryType\":\"pick-up\",\"partnerId\":1,\"city\":\"\"},{\"distance\":3740,\"partnerStoreId\":11647,\"address\":\"Unit No.-1 [C], (Amenity Block-II), IT/ITES SEZ Complex, Sector-21, Dundahera, Gurgaon, Haryana- 122001\",\"pincode\":122001,\"workingHours\":null,\"apolloStateCode\":null,\"storeName\":\"INFOSPACE LTD GURUGRAM SEC-21\",\"phone\":null,\"orderDeliveryType\":\"pick-up\",\"partnerId\":1,\"city\":\"GURGAON\"}],\"totalAmount\":1350,\"deliveryCharge\":0,\"orderSubTotal\":1500,\"orderDiscount\":150,\"partnerTat\":0,\"estimatedDeliveryDateByPartner\":null,\"hasLowestTat\":false,\"deliveryChargeBreakup\":null,\"discountPercentage\":10,\"walletDetails\":{\"orderType\":\"cod\",\"result\":{\"copayPercentage\":0,\"discountLabel\":\"Wallet Discount\",\"discountType\":\"Covered\",\"discountAmount\":0,\"walletDiscount\":0,\"userPayable\":1350,\"totalWalletBalance\":0,\"sponsorLogo\":\"https://api.getvisitapp.com/apiv3/sponsor-images/sponsor-77.png\"},\"isStarHealthOrder\":false,\"paymentMessage\":null,\"allowPlaceOrder\":true,\"walletBalance\":{\"title\":\"Wallet Balance\",\"value\":0}},\"disclaimer\":[],\"quantityUpdateMessage\":\"Items not included in this delivery are saved and can be ordered after this delivery arrives.\"}"
+    },
+    {
+      "name": "11. place-order",
+      "method": "GET",
+      "status": "200 (7366 ms)",
+      "ok": true,
+      "url": "http://127.0.0.1:2020/cart/submit?amount=1350&auth=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM&cartId=982457&deliveryType=home-delivery&storeId=11488",
+      "request": "Headers:\\n{\n  \"Content-Type\": \"application/json\",\n  \"authorization\": \"JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwMDIyNzQsInBsYXRmb3JtIjoiV0VCIiwidXNlclR5cGUiOiJ1c2VyIiwiaWF0IjoxNzczMTE3MjAxLCJleHAiOjE4MDQ2NTMyMDF9.EdS0Fhv95B7jCMlgRBWVbz00TR5XrjCYUyTndgHFPFM\",\n  \"entityId\": \"10\"\n}\\n\\nBody:\\n",
+      "response": "Headers:\\n{\n  \"access-control-allow-credentials\": \"true\",\n  \"access-control-allow-headers\": \"Origin, X-Requested-With, Content-Type, Accept, Authorization, Access-Control-Allow-Credentials, ClientId, Encrypted, dopeEntityId, entityId, x-pillup-token\",\n  \"access-control-allow-methods\": \"PUT, GET, POST, DELETE, PATCH, OPTIONS\",\n  \"cache-control\": \"no-store\",\n  \"connection\": \"keep-alive\",\n  \"content-length\": \"416\",\n  \"content-security-policy\": \"form-action 'self' https://*.cashfree.com;script-src-attr 'unsafe-inline';default-src *;script-src * 'unsafe-inline';style-src * 'unsafe-inline';img-src * data: 'unsafe-inline';font-src * 'unsafe-inline';connect-src * 'unsafe-inline';object-src * 'unsafe-inline';frame-src * 'unsafe-inline';child-src * 'unsafe-inline';media-src * 'unsafe-inline';manifest-src * 'unsafe-inline';base-uri 'self';frame-ancestors 'self';upgrade-insecure-requests\",\n  \"content-type\": \"text/html; charset=utf-8\",\n  \"cross-origin-embedder-policy\": \"unsafe-none\",\n  \"cross-origin-opener-policy\": \"unsafe-none\",\n  \"cross-origin-resource-policy\": \"cross-origin\",\n  \"date\": \"Tue, 10 Mar 2026 04:33:44 GMT\",\n  \"etag\": \"W/\\\"1a0-4ScHY2YdCAz4uRpSIz2mg6vXX9Y\\\"\",\n  \"keep-alive\": \"timeout=5\",\n  \"origin-agent-cluster\": \"?1\",\n  \"permission-policy\": \"geolocation=*, camera=*, microphone=*, fullscreen=*, payment=*, clipboard-write=*, autoplay=*\",\n  \"referrer-policy\": \"no-referrer\",\n  \"strict-transport-security\": \"max-age=31536000; includeSubDomains\",\n  \"x-content-type-options\": \"nosniff\",\n  \"x-dns-prefetch-control\": \"off\",\n  \"x-download-options\": \"noopen\",\n  \"x-frame-options\": \"SAMEORIGIN\",\n  \"x-permitted-cross-domain-policies\": \"none\",\n  \"x-powered-by\": \"Express\",\n  \"x-xss-protection\": \"0\"\n}\\n\\nBody:\\n<!DOCTYPE html><html><head><title><\\/title><link rel=\"stylesheet\" href=\"/stylesheets/style.css\"><\\/head><body><script>window.location.href = 'https://web.getvisitapp.net/home/consult?success=false&cartId=982457&digitisationId=5080681&retry=true&serviceType=pharmacy&description=Partner%20is%20not%20able%20to%20service%20the%20cart%20right%20now.%20Try%20again%20with%20a%20different%20partner.'<\\/script><\\/body><\\/html>"
+    }
+  ]
+};
+    const summary = data.summary || {};
+
+    const steps = (data.steps || []).map((step, index) => {
+        const request = parseStructuredPayload(step.request);
+        const response = parseStructuredPayload(step.response);
+        const statusCode = extractStatusCode(step.status);
+        const durationMs = extractDurationMs(step.status);
+
+        return {
+            index,
+            name: step.name || `step-${index + 1}`,
+            method: step.method || 'NA',
+            url: step.url || 'NA',
+            ok: !!step.ok,
+            statusCode,
+            durationMs,
+            request,
+            response,
+            rawStatus: step.status || ''
+        };
+    });
+
+    const app = document.getElementById('app');
+    const page = new Container();
+
+    const header = new Card()
+        .setStyle(Style.Key.MARGIN_BOTTOM, '12px');
+
+    header.addChildren(
+        new Div().setText(data.title || 'API Execution Report').setStyle(Style.Key.FONT_SIZE, '24px').setStyle(Style.Key.FONT_WEIGHT, '800').setStyle(Style.Key.COLOR, '#0f172a'),
+        new Div().setText(`Run: ${data.timestamp || 'NA'}`).setStyle(Style.Key.FONT_SIZE, '13px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '6px'),
+        new Div().setText(`Current Step: ${summary.currentStep || 'Final'}`).setStyle(Style.Key.FONT_SIZE, '13px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '4px')
+    );
+
+    const stats = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '10px')
+        .setStyle(Style.Key.MARGIN_TOP, '12px');
+
+    function statCard(label, value, color) {
+        return new VerticalLayout()
+            .setStyle(Style.Key.FLEX, '1')
+            .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+            .setStyle(Style.Key.BORDER_RADIUS, '8px')
+            .setStyle(Style.Key.PADDING, '10px')
+            .setStyle(Style.Key.BORDER_TOP, `3px solid ${color}`)
+            .addChildren(
+                new Div().setText(label).setStyle(Style.Key.FONT_SIZE, '11px').setStyle(Style.Key.FONT_WEIGHT, '700').setStyle(Style.Key.COLOR, '#64748b'),
+                new Div().setText(String(value)).setStyle(Style.Key.FONT_SIZE, '20px').setStyle(Style.Key.FONT_WEIGHT, '800').setStyle(Style.Key.COLOR, color).setStyle(Style.Key.MARGIN_TOP, '4px')
+            );
+    }
+
+    stats.addChildren(
+        statCard('Total', summary.totalFlowSteps || 0, '#1e293b'),
+        statCard('Executed', summary.total || 0, '#7c3aed'),
+        statCard('Passed', summary.passed || 0, '#10b981'),
+        statCard('Failed', summary.failed || 0, '#ef4444'),
+        statCard('Total Time (ms)', summary.totalExecutionTimeInMillis || 0, '#0284c7')
+    );
+
+    header.addChild(stats);
+    page.addChild(header);
+
+    const workspace = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '12px');
+
+    const leftPane = new VerticalLayout()
+        .setStyle(Style.Key.WIDTH, '360px')
+        .setStyle(Style.Key.MIN_HEIGHT, '860px')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+        .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BORDER_RADIUS, '12px')
+        .setStyle(Style.Key.OVERFLOW_X, 'hidden')
+        .setStyle(Style.Key.OVERFLOW_Y, 'auto');
+
+    const rightPane = new VerticalLayout()
+        .setStyle(Style.Key.FLEX, '1')
+        .setStyle(Style.Key.MIN_HEIGHT, '860px')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+        .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BORDER_RADIUS, '12px')
+        .setStyle(Style.Key.OVERFLOW, 'hidden');
+
+    const listHeader = new Div()
+        .setText('APIs')
+        .setStyle(Style.Key.PADDING, '12px')
+        .setStyle(Style.Key.FONT_SIZE, '13px')
+        .setStyle(Style.Key.FONT_WEIGHT, '800')
+        .setStyle(Style.Key.COLOR, '#334155')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0');
+
+    leftPane.addChild(listHeader);
+
+    const listWrap = new VerticalLayout();
+    leftPane.addChild(listWrap);
+
+    const detailHeader = new VerticalLayout()
+        .setStyle(Style.Key.PADDING, '12px')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0');
+
+    const detailTitle = new Div().setStyle(Style.Key.FONT_SIZE, '15px').setStyle(Style.Key.FONT_WEIGHT, '700').setStyle(Style.Key.COLOR, '#0f172a');
+    const detailMeta = new Div().setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '4px').setStyle(Style.Key.WORD_BREAK, 'break-all');
+
+    detailHeader.addChildren(detailTitle, detailMeta);
+
+    const tabsBar = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '6px')
+        .setStyle(Style.Key.PADDING, '10px 12px')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#f8fafc');
+
+    const tabContent = new VerticalLayout()
+        .setStyle(Style.Key.PADDING, '12px')
+        .setStyle(Style.Key.OVERFLOW, 'auto')
+        .setStyle(Style.Key.HEIGHT, '730px');
+
+    rightPane.addChildren(detailHeader, tabsBar, tabContent);
+
+    workspace.addChildren(leftPane, rightPane);
+    page.addChild(workspace);
+
+    app.appendChild(page.getElement());
+
+    const listRows = [];
+
+    function renderTabsForStep(step) {
+        tabsBar.getElement().innerHTML = '';
+        tabContent.getElement().innerHTML = '';
+
+        const tabs = [
+            { id: 'meta', label: 'Meta', render: renderMeta },
+            { id: 'reqHeaders', label: 'Request Headers', render: () => renderCodeSection('Request Headers', step.request.headers || '{}') },
+            { id: 'reqBody', label: 'Request Body', render: () => renderCodeSection('Request Body', step.request.body || '') },
+            { id: 'resHeaders', label: 'Response Headers', render: () => renderCodeSection('Response Headers', step.response.headers || '{}') },
+            { id: 'resBody', label: 'Response Body', render: () => renderCodeSection('Response Body', step.response.body || '') }
+        ];
+
+        if (step.request.file) {
+            tabs.splice(3, 0, { id: 'reqFile', label: 'Req File', render: () => renderCodeSection('Request File', step.request.file) });
+        }
+        if (step.request.form) {
+            tabs.splice(step.request.file ? 4 : 3, 0, { id: 'reqForm', label: 'Req Form', render: () => renderCodeSection('Request Form Fields', step.request.form) });
+        }
+
+        let activeTab = tabs[0].id;
+
+        function drawTabs() {
+            tabsBar.getElement().innerHTML = '';
+            tabs.forEach((tab) => {
+                const tabButton = new Button(tab.label)
+                    .setStyle(Style.Key.PADDING, '6px 10px')
+                    .setStyle(Style.Key.BORDER, '1px solid ' + (activeTab === tab.id ? '#2563eb' : '#d1d5db'))
+                    .setStyle(Style.Key.BORDER_RADIUS, '8px')
+                    .setStyle(Style.Key.BACKGROUND_COLOR, activeTab === tab.id ? '#eff6ff' : '#ffffff')
+                    .setStyle(Style.Key.COLOR, activeTab === tab.id ? '#1d4ed8' : '#334155')
+                    .setStyle(Style.Key.FONT_SIZE, '12px')
+                    .setStyle(Style.Key.FONT_WEIGHT, '700')
+                    .setStyle(Style.Key.CURSOR, Style.Value.POINTER)
+                    .addEventListener('click', () => {
+                        activeTab = tab.id;
+                        drawTabs();
+                        drawContent();
+                    });
+                tabsBar.addChild(tabButton);
+            });
+        }
+
+        function drawContent() {
+            tabContent.getElement().innerHTML = '';
+            const tab = tabs.find((item) => item.id === activeTab);
+            if (tab) tab.render();
+        }
+
+        function renderMeta() {
+            const metaWrap = new VerticalLayout().setStyle(Style.Key.GAP, '8px');
+            const rows = [
+                ['Method', step.method],
+                ['URL', step.url],
+                ['Status', String(step.statusCode || 'NA')],
+                ['Duration (ms)', String(step.durationMs || 0)],
+                ['Result', step.ok ? 'PASS' : 'FAIL']
+            ];
+
+            rows.forEach(([k, v]) => {
+                metaWrap.addChild(
+                    new HorizontalLayout()
+                        .setStyle(Style.Key.GAP, '8px')
+                        .addChildren(
+                            new Div().setText(k).setStyle(Style.Key.WIDTH, '130px').setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.FONT_WEIGHT, '700').setStyle(Style.Key.COLOR, '#475569'),
+                            new Div().setText(v).setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.COLOR, '#0f172a').setStyle(Style.Key.WORD_BREAK, 'break-all')
+                        )
+                );
+            });
+
+            tabContent.addChild(metaWrap);
+        }
+
+        function renderCodeSection(title, content) {
+            tabContent.addChildren(sectionTitle(title), codeBlock(content));
+        }
+
+        drawTabs();
+        drawContent();
+    }
+
+    function selectStep(selectedIndex) {
+        listRows.forEach((row, index) => {
+            row
+                .setStyle(Style.Key.BACKGROUND_COLOR, index === selectedIndex ? '#eff6ff' : '#ffffff')
+                .setStyle(Style.Key.BORDER_LEFT, index === selectedIndex ? '3px solid #2563eb' : '3px solid transparent');
+        });
+
+        const step = steps[selectedIndex];
+        if (!step) return;
+
+        detailTitle.getElement().innerHTML = '';
+        detailTitle.addChildren(methodPill(step.method), document.createTextNode(' ' + step.name));
+        detailMeta.setText(`${step.url} | ${step.statusCode || 'NA'} | ${step.durationMs || 0} ms`);
+        renderTabsForStep(step);
+    }
+
+    steps.forEach((step, index) => {
+        const row = new Div()
+            .setStyle(Style.Key.PADDING, '10px 10px 10px 12px')
+            .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #eef2f7')
+            .setStyle(Style.Key.CURSOR, 'pointer')
+            .setStyle(Style.Key.BORDER_LEFT, '3px solid transparent')
+            .addEventListener('click', () => selectStep(index));
+
+        const top = new HorizontalLayout().setStyle(Style.Key.JUSTIFY_CONTENT, 'space-between').setStyle(Style.Key.ALIGN_ITEMS, 'center');
+        const left = new HorizontalLayout().setStyle(Style.Key.GAP, '6px').setStyle(Style.Key.ALIGN_ITEMS, 'center');
+        left.addChildren(methodPill(step.method), new Div().setText(step.name).setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.FONT_WEIGHT, '600').setStyle(Style.Key.COLOR, '#0f172a'));
+        top.addChildren(left, statusPill(step.statusCode || 'NA', step.ok));
+
+        const bottom = new Div().setStyle(Style.Key.FONT_SIZE, '11px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.MARGIN_TOP, '6px').setStyle(Style.Key.WORD_BREAK, 'break-all').setText(`${step.url} | ${step.durationMs || 0} ms`);
+
+        row.addChildren(top, bottom);
+        listRows.push(row);
+        listWrap.addChild(row);
+    });
+
+    if (steps.length > 0) {
+        selectStep(0);
+    } else {
+        detailTitle.setText('No API steps available');
+        detailMeta.setText('Run did not capture API logs.');
+        tabContent.addChild(new Div().setText('No request/response details to display.').setStyle(Style.Key.FONT_SIZE, '13px').setStyle(Style.Key.COLOR, '#64748b'));
+    }
+
+    if (data.error) {
+        const errorCard = new Div()
+            .setStyle(Style.Key.BACKGROUND_COLOR, '#fef2f2')
+            .setStyle(Style.Key.BORDER, '1px solid #fecaca')
+            .setStyle(Style.Key.BORDER_RADIUS, '12px')
+            .setStyle(Style.Key.PADDING, '12px')
+            .setStyle(Style.Key.MARGIN_TOP, '12px');
+
+        errorCard.addChildren(
+            new Div().setText('Execution Error').setStyle(Style.Key.FONT_SIZE, '14px').setStyle(Style.Key.FONT_WEIGHT, '800').setStyle(Style.Key.COLOR, '#b91c1c'),
+            new Div().setText(`${data.error.type || 'Error'}: ${data.error.message || 'Unknown error'}`).setStyle(Style.Key.MARGIN_TOP, '6px').setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.COLOR, '#7f1d1d'),
+            codeBlock(String(data.error.stackTrace || ''))
+                .setStyle(Style.Key.MARGIN_TOP, '8px')
+                .setStyle(Style.Key.BACKGROUND_COLOR, '#fff')
+        );
+
+        page.addChild(errorCard);
+    }
+</script>
+</body>
+</html>

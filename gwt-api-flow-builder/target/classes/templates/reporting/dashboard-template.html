@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Combined API Reports</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f8fafc;
+            font-family: Inter, system-ui, sans-serif;
+            color: #1e293b;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        #app {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+    export class Style {
+        static Key = {
+            DISPLAY: 'display', FLEX_DIRECTION: 'flexDirection', FLEX_WRAP: 'flexWrap', FLEX: 'flex',
+            ALIGN_ITEMS: 'alignItems', JUSTIFY_CONTENT: 'justifyContent', GAP: 'gap',
+            WIDTH: 'width', MAX_WIDTH: 'maxWidth', HEIGHT: 'height', MIN_HEIGHT: 'minHeight',
+            MARGIN: 'margin', MARGIN_BOTTOM: 'marginBottom', MARGIN_TOP: 'marginTop',
+            PADDING: 'padding',
+            BORDER: 'border', BORDER_RADIUS: 'borderRadius', BORDER_BOTTOM: 'borderBottom',
+            BACKGROUND_COLOR: 'backgroundColor', COLOR: 'color',
+            FONT_SIZE: 'fontSize', FONT_WEIGHT: 'fontWeight',
+            CURSOR: 'cursor', TEXT_ALIGN: 'textAlign',
+            POSITION: 'position', TOP: 'top', Z_INDEX: 'zIndex',
+            OVERFLOW: 'overflow', OVERFLOW_X: 'overflowX', OVERFLOW_Y: 'overflowY',
+            BORDER_LEFT: 'borderLeft', BORDER_TOP: 'borderTop'
+        };
+
+        static Value = {
+            NONE: 'none', BLOCK: 'block', FLEX: 'flex', ROW: 'row', COLUMN: 'column', WRAP: 'wrap', NOWRAP: 'nowrap',
+            POINTER: 'pointer'
+        };
+
+        #component;
+        #style = {};
+
+        constructor(component) { this.#component = component; }
+        set(key, value) {
+            const element = this.#component.getElement();
+            if (value === null || value === undefined) {
+                delete this.#style[key];
+                element.style.removeProperty(key);
+            } else {
+                this.#style[key] = value;
+                element.style[key] = value;
+            }
+            return this;
+        }
+        get(key) { return this.#component.getElement().style[key]; }
+        remove(key) { return this.set(key, null); }
+    }
+
+    export class Attribute {
+        #component;
+        constructor(component) { this.#component = component; }
+        set(key, value) { this.#component.getElement().setAttribute(key, value); return this; }
+        get(key) { return this.#component.getElement().getAttribute(key); }
+    }
+
+    export class Property {
+        #component;
+        constructor(component) { this.#component = component; }
+        set(key, value) { this.#component.getElement()[key] = value; return this; }
+        get(key) { return this.#component.getElement()[key]; }
+    }
+
+    export class Component {
+        #element;
+        #children = [];
+        #style;
+        #attribute;
+        #property;
+
+        constructor(tagName = 'div') {
+            this.#element = document.createElement(tagName);
+            this.#style = new Style(this);
+            this.#attribute = new Attribute(this);
+            this.#property = new Property(this);
+        }
+
+        addChild(child) {
+            if (!child) return this;
+            if (child instanceof Component) {
+                this.#element.appendChild(child.getElement());
+                this.#children.push(child);
+            } else if (child instanceof Node) {
+                this.#element.appendChild(child);
+            }
+            return this;
+        }
+
+        addChildren(...children) { children.forEach(child => this.addChild(child)); return this; }
+        clearChildren() { this.#element.innerHTML = ''; this.#children = []; return this; }
+        setText(text) { this.#element.textContent = text; return this; }
+        setHtml(html) { this.#element.innerHTML = html; return this; }
+        addClass(name) { this.#element.classList.add(name); return this; }
+        addEventListener(event, handler) { this.#element.addEventListener(event, handler); return this; }
+
+        getElement() { return this.#element; }
+        setStyle(key, value) { this.#style.set(key, value); return this; }
+        setAttribute(key, value) { this.#attribute.set(key, value); return this; }
+        setProperty(key, value) { this.#property.set(key, value); return this; }
+    }
+
+    export class Div extends Component { constructor() { super('div'); } }
+    export class Main extends Component { constructor() { super('main'); } }
+    export class Nav extends Component { constructor() { super('nav'); } }
+    export class Section extends Component { constructor() { super('section'); } }
+    export class Paragraph extends Component { constructor() { super('p'); } }
+    export class Heading extends Component { constructor(level = 1) { super('h' + level); } }
+    export class Anchor extends Component { constructor(label = '') { super('a'); this.setText(label); } }
+    export class TextArea extends Component { constructor() { super('textarea'); } }
+    export class Button extends Component { constructor(label = '') { super('button'); this.setText(label); } }
+    export class Frame extends Component { constructor() { super('iframe'); } }
+
+    export class VerticalLayout extends Div {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.DISPLAY, Style.Value.FLEX)
+                .setStyle(Style.Key.FLEX_DIRECTION, Style.Value.COLUMN)
+                .setStyle(Style.Key.FLEX_WRAP, Style.Value.NOWRAP);
+        }
+    }
+
+    export class HorizontalLayout extends Div {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.DISPLAY, Style.Value.FLEX)
+                .setStyle(Style.Key.FLEX_DIRECTION, Style.Value.ROW)
+                .setStyle(Style.Key.FLEX_WRAP, Style.Value.WRAP);
+        }
+    }
+
+    export class Container extends VerticalLayout {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.WIDTH, '100%').setStyle(Style.Key.MAX_WIDTH, '1500px').setStyle(Style.Key.MARGIN, '0 auto').setStyle(Style.Key.PADDING, '16px');
+        }
+    }
+
+    export class Card extends VerticalLayout {
+        constructor() {
+            super();
+            this.setStyle(Style.Key.BACKGROUND_COLOR, '#fff').setStyle(Style.Key.BORDER, '1px solid #e2e8f0').setStyle(Style.Key.BORDER_RADIUS, '10px').setStyle(Style.Key.PADDING, '12px');
+        }
+    }
+
+    const data = `{{JSON_DATA}}`;
+
+    const header = new HorizontalLayout()
+        .setStyle(Style.Key.POSITION, 'sticky')
+        .setStyle(Style.Key.TOP, '0')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+        .setStyle(Style.Key.Z_INDEX, '100')
+        .setStyle(Style.Key.PADDING, '14px 18px')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0')
+        .setStyle(Style.Key.ALIGN_ITEMS, 'center')
+        .setStyle(Style.Key.JUSTIFY_CONTENT, 'space-between');
+
+    const title = new Heading(2)
+        .setText('Visit Health API Flow Testing Report')
+        .setStyle(Style.Key.MARGIN, '0')
+        .setStyle(Style.Key.FONT_SIZE, '20px')
+        .setStyle(Style.Key.FONT_WEIGHT, '600');
+
+    const meta = new VerticalLayout()
+        .setStyle(Style.Key.ALIGN_ITEMS, 'flex-start')
+        .setStyle(Style.Key.FONT_SIZE, '13px')
+        .setStyle(Style.Key.COLOR, '#64748b');
+
+    meta.addChildren(
+        new Paragraph()
+            .setText('Environment: ' + data.environment)
+            .setStyle(Style.Key.MARGIN, '0'),
+
+        new Paragraph()
+            .setText('Timestamp: ' + data.generatedAt)
+            .setStyle(Style.Key.MARGIN, '0')
+    );
+
+
+    header.addChildren(title, meta);
+
+    const page = new Container();
+    page.setStyle(Style.Key.FLEX, '1').setStyle(Style.Key.OVERFLOW, 'hidden');
+    page.addChildren(header);
+
+    const workspace = new HorizontalLayout()
+        .setStyle(Style.Key.FLEX, '1')
+        .setStyle(Style.Key.GAP, '12px')
+        .setStyle(Style.Key.OVERFLOW, 'hidden');
+
+    const leftPane = new VerticalLayout()
+        .setStyle(Style.Key.WIDTH, '320px')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#ffffff')
+        .setStyle(Style.Key.BORDER, '1px solid #e2e8f0')
+        .setStyle(Style.Key.BORDER_RADIUS, '10px')
+        .setStyle(Style.Key.OVERFLOW_X, 'hidden')
+        .setStyle(Style.Key.OVERFLOW_Y, 'auto');
+
+    const rightPane = new VerticalLayout()
+        .setStyle(Style.Key.FLEX, '1')
+        .setStyle(Style.Key.OVERFLOW, 'hidden');
+
+    const tableHead = new HorizontalLayout()
+        .setStyle(Style.Key.PADDING, '8px 12px')
+        .setStyle(Style.Key.BACKGROUND_COLOR, '#f8fafc')
+        .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #e2e8f0')
+        .setStyle(Style.Key.ALIGN_ITEMS, 'center')
+        .setStyle(Style.Key.GAP, '8px')
+        .setStyle(Style.Key.FONT_SIZE, '11px')
+        .setStyle(Style.Key.FONT_WEIGHT, '700')
+        .setStyle(Style.Key.COLOR, '#64748b');
+
+    tableHead.addChildren(
+        new Div().setText('#').setStyle(Style.Key.WIDTH, '20px'),
+        new Div().setText('Journey').setStyle(Style.Key.FLEX, '1'),
+        new Div().setText('Status').setStyle(Style.Key.WIDTH, '70px'),
+        new Div().setText('ms').setStyle(Style.Key.WIDTH, '60px').setStyle(Style.Key.TEXT_ALIGN, 'right')
+    );
+    leftPane.addChild(tableHead);
+
+    const linksBar = new HorizontalLayout()
+        .setStyle(Style.Key.GAP, '8px')
+        .setStyle(Style.Key.MARGIN_BOTTOM, '10px');
+
+    const openLink = new Anchor('Open HTML').setAttribute('target', '_blank');
+    const htmlLink = new Anchor('Download HTML');
+    const jsonLink = new Anchor('Download JSON');
+
+    [openLink, htmlLink, jsonLink].forEach(link => {
+        link.setStyle(Style.Key.PADDING, '6px 12px')
+            .setStyle(Style.Key.BORDER, '1px solid #cbd5e1')
+            .setStyle(Style.Key.BORDER_RADIUS, '6px')
+            .setStyle(Style.Key.BACKGROUND_COLOR, '#f8fafc')
+            .setStyle(Style.Key.COLOR, '#0f172a')
+            .setStyle(Style.Key.FONT_SIZE, '13px');
+    });
+    openLink.setStyle(Style.Key.BACKGROUND_COLOR, '#1a73e8').setStyle(Style.Key.COLOR, '#fff');
+    linksBar.addChildren(openLink, htmlLink, jsonLink);
+
+    const frame = new Frame()
+        .setAttribute('width', '100%')
+        .setStyle(Style.Key.FLEX, '1')
+        .setStyle(Style.Key.MIN_HEIGHT, '500px')
+        .setStyle(Style.Key.BORDER, 'none');
+
+    rightPane.addChildren(linksBar, frame);
+
+    const tableRows = [];
+
+    function selectReport(index) {
+        const report = (data.reports || [])[index];
+        if (!report) return;
+
+        tableRows.forEach((row, i) => {
+            row.setStyle(Style.Key.BACKGROUND_COLOR, i === index ? '#eff6ff' : '#ffffff')
+               .setStyle(Style.Key.BORDER_LEFT, i === index ? '3px solid #2563eb' : '3px solid transparent');
+        });
+
+        frame.setAttribute('src', report.htmlFile).setAttribute('title', report.displayName);
+        openLink.setAttribute('href', report.htmlFile);
+        htmlLink.setAttribute('href', report.htmlFile).setAttribute('download', report.htmlFile);
+        jsonLink.setAttribute('href', report.jsonFile).setAttribute('download', report.jsonFile);
+    }
+
+    (data.reports || []).forEach((report, index) => {
+        const isFailed = report.status === 'FAILURE';
+
+        const statusPill = new Div()
+            .setText(report.status || 'PENDING')
+            .setStyle(Style.Key.FONT_SIZE, '10px')
+            .setStyle(Style.Key.FONT_WEIGHT, '700')
+            .setStyle(Style.Key.PADDING, '2px 6px')
+            .setStyle(Style.Key.BORDER_RADIUS, '999px')
+            .setStyle(Style.Key.BACKGROUND_COLOR, isFailed ? '#fee2e2' : '#dcfce7')
+            .setStyle(Style.Key.COLOR, isFailed ? '#991b1b' : '#166534')
+            .setStyle(Style.Key.WIDTH, '70px')
+            .setStyle(Style.Key.TEXT_ALIGN, 'center');
+
+        const row = new HorizontalLayout()
+            .setStyle(Style.Key.PADDING, '10px 12px')
+            .setStyle(Style.Key.BORDER_BOTTOM, '1px solid #f1f5f9')
+            .setStyle(Style.Key.BORDER_LEFT, '3px solid transparent')
+            .setStyle(Style.Key.CURSOR, Style.Value.POINTER)
+            .setStyle(Style.Key.ALIGN_ITEMS, 'center')
+            .setStyle(Style.Key.GAP, '8px')
+            .addEventListener('click', () => selectReport(index));
+
+        row.addChildren(
+            new Div().setText(String(index + 1)).setStyle(Style.Key.WIDTH, '20px').setStyle(Style.Key.FONT_SIZE, '11px').setStyle(Style.Key.COLOR, '#94a3b8'),
+            new Div().setText(report.displayName).setStyle(Style.Key.FLEX, '1').setStyle(Style.Key.FONT_SIZE, '12px').setStyle(Style.Key.FONT_WEIGHT, '600').setStyle(Style.Key.COLOR, isFailed ? '#991b1b' : '#0f172a'),
+            statusPill,
+            new Div().setText(String(report.totalExecutionTimeInMillis)).setStyle(Style.Key.WIDTH, '60px').setStyle(Style.Key.FONT_SIZE, '11px').setStyle(Style.Key.COLOR, '#64748b').setStyle(Style.Key.TEXT_ALIGN, 'right')
+        );
+
+        tableRows.push(row);
+        leftPane.addChild(row);
+    });
+
+    workspace.addChildren(leftPane, rightPane);
+    page.addChildren(workspace);
+    document.getElementById('app').appendChild(page.getElement());
+
+    if ((data.reports || []).length > 0) {
+        selectReport(0);
+    }
+</script>
+</body>
+</html>

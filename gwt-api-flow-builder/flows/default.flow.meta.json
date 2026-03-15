@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "identifier": "default.flow.meta",
+    "version": "1.0"
+  },
+  "environment": {
+    "baseUrl": "https://uat.api.example.com",
+    "defaults": {
+      "timeoutMilliseconds": 10000,
+      "retryPolicy": {
+        "maximumAttempts": 2,
+        "delayMilliseconds": 500
+      }
+    }
+  },
+  "environments": {
+    "activeEnvironmentId": "2",
+    "environmentItems": [
+      {
+        "environmentId": "2",
+        "environmentName": "UAT_2",
+        "baseUrl": "https://uat.api.example.com",
+        "defaults": {
+          "timeoutMilliseconds": 10000,
+          "retryPolicy": {
+            "maximumAttempts": 2,
+            "delayMilliseconds": 500
+          }
+        },
+        "environmentVariables": {
+          "BASE_URL": "https://uat.api.example.com"
+        }
+      },
+      {
+        "environmentId": "3",
+        "environmentName": "PROD",
+        "baseUrl": "https://api.example.com",
+        "defaults": {
+          "timeoutMilliseconds": 10000,
+          "retryPolicy": {
+            "maximumAttempts": 2,
+            "delayMilliseconds": 500
+          }
+        },
+        "environmentVariables": {
+          "BASE_URL": "https://api.example.com",
+          "TENANT_ID": "prod-tenant"
+        }
+      }
+    ]
+  },
+  "globalInputs": {
+    "USER_PHONE": "{{USER_PHONE}}",
+    "USER_OTP": "{{USER_OTP}}"
+  },
+  "steps": [
+    {
+      "stepIdentifier": "STEP_1",
+      "request": {
+        "httpMethod": "GET",
+        "requestUrl": "{{BASE_URL}}/users/{{USER_ID}}",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    },
+    {
+      "stepIdentifier": "STEP_2",
+      "request": {
+        "httpMethod": "POST",
+        "requestUrl": "{{BASE_URL}}/orders/{{ORDER_ID}}/events",
+        "timeoutMilliseconds": 10000,
+        "retryPolicy": {
+          "maximumAttempts": 2,
+          "delayMilliseconds": 500
+        }
+      },
+      "checks": [
+        {
+          "source": "status"
+        }
+      ]
+    }
+  ]
+}
