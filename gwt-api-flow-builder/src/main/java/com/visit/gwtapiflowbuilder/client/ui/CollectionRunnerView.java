@@ -42,28 +42,28 @@ public final class CollectionRunnerView {
             state.navbarView.runButton.setText("Running…");
             state.navbarView.runButton.setEnabled(false);
         }
-        RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, "/api/flows/run?name=" + flowName);
+        RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, "/api/flows/run?name=" + flowName);
         try {
-            rb.sendRequest(null, new RequestCallback() {
+            requestBuilder.sendRequest(null, new RequestCallback() {
                 @Override
-                public void onResponseReceived(Request req, Response resp) {
+                public void onResponseReceived(Request request, Response response) {
                     resetRunButton();
-                    if (resp.getStatusCode() == 200) {
-                        showRunReport(resp.getText());
+                    if (response.getStatusCode() == 200) {
+                        showRunReport(response.getText());
                     } else {
-                        Window.alert("Run failed: " + resp.getStatusCode() + "\n" + resp.getText());
+                        Window.alert("Run failed: " + response.getStatusCode() + "\n" + response.getText());
                     }
                 }
 
                 @Override
-                public void onError(Request req, Throwable ex) {
+                public void onError(Request request, Throwable exception) {
                     resetRunButton();
-                    Window.alert("Run error: " + ex.getMessage());
+                    Window.alert("Run error: " + exception.getMessage());
                 }
             });
-        } catch (RequestException ex) {
+        } catch (RequestException requestException) {
             resetRunButton();
-            Window.alert("Run error: " + ex.getMessage());
+            Window.alert("Run error: " + requestException.getMessage());
         }
     }
 
@@ -72,24 +72,24 @@ public final class CollectionRunnerView {
     // -------------------------------------------------------------------------
 
     public void showRunReport(String json) {
-        JSONObject obj;
+        JSONObject reportObject;
         try {
-            obj = JSONParser.parseStrict(json).isObject();
-        } catch (Exception e) {
-            Window.alert("Could not parse report: " + e.getMessage());
+            reportObject = JSONParser.parseStrict(json).isObject();
+        } catch (Exception exception) {
+            Window.alert("Could not parse report: " + exception.getMessage());
             return;
         }
-        if (obj == null) {
+        if (reportObject == null) {
             Window.alert("Unexpected report response.");
             return;
         }
 
-        int total      = (int) obj.get("totalSteps").isNumber().doubleValue();
-        int passed     = (int) obj.get("passedSteps").isNumber().doubleValue();
-        int failed     = (int) obj.get("failedSteps").isNumber().doubleValue();
-        long ms        = (long) obj.get("totalDurationMs").isNumber().doubleValue();
-        String reportUrl = obj.get("reportUrl").isString().stringValue();
-        String execAt    = obj.get("executedAt").isString().stringValue();
+        int total            = (int) reportObject.get("totalSteps").isNumber().doubleValue();
+        int passed           = (int) reportObject.get("passedSteps").isNumber().doubleValue();
+        int failed           = (int) reportObject.get("failedSteps").isNumber().doubleValue();
+        long totalDurationMs = (long) reportObject.get("totalDurationMs").isNumber().doubleValue();
+        String reportUrl     = reportObject.get("reportUrl").isString().stringValue();
+        String executedAt    = reportObject.get("executedAt").isString().stringValue();
 
         // Backdrop
         FlowPanel overlay = new FlowPanel();
@@ -123,33 +123,33 @@ public final class CollectionRunnerView {
         title.getElement().getStyle().setProperty(BaseStyle.Key.FONT_WEIGHT, "700");
         title.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "15px");
         title.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
-        Button closeBtn = UiFactory.ghostButton("✕");
-        closeBtn.addClickHandler(e -> state.root.remove(overlay));
+        Button closeButton = UiFactory.ghostButton("✕");
+        closeButton.addClickHandler(event -> state.root.remove(overlay));
         titleRow.add(title);
-        titleRow.add(closeBtn);
+        titleRow.add(closeButton);
         card.add(titleRow);
 
         // Executed at
-        Label atLabel = new Label("Executed: " + execAt);
-        atLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_78);
-        atLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_MUTED);
-        card.add(atLabel);
+        Label executedAtLabel = new Label("Executed: " + executedAt);
+        executedAtLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_78);
+        executedAtLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_MUTED);
+        card.add(executedAtLabel);
 
         // Stats row
         FlowPanel statsRow = new FlowPanel();
         statsRow.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
         statsRow.getElement().getStyle().setProperty(BaseStyle.Key.GRID_TEMPLATE_COLUMNS, "repeat(4,1fr)");
         statsRow.getElement().getStyle().setProperty(BaseStyle.Key.GAP, "8px");
-        statsRow.add(statBadge("Total",    String.valueOf(total),  "#2563eb"));
-        statsRow.add(statBadge("Passed",   String.valueOf(passed), "#16a34a"));
-        statsRow.add(statBadge("Failed",   String.valueOf(failed), failed > 0 ? "#dc2626" : "#16a34a"));
-        statsRow.add(statBadge("Duration", ms + " ms",             "#7c3aed"));
+        statsRow.add(statBadge("Total",    String.valueOf(total),          "#2563eb"));
+        statsRow.add(statBadge("Passed",   String.valueOf(passed),         "#16a34a"));
+        statsRow.add(statBadge("Failed",   String.valueOf(failed),         failed > 0 ? "#dc2626" : "#16a34a"));
+        statsRow.add(statBadge("Duration", totalDurationMs + " ms",        "#7c3aed"));
         card.add(statsRow);
 
         // Step list
-        JSONValue stepsVal = obj.get("steps");
-        JSONArray stepsArr = stepsVal == null ? null : stepsVal.isArray();
-        if (stepsArr != null) {
+        JSONValue stepsJsonValue = reportObject.get("steps");
+        JSONArray stepResultsArray = stepsJsonValue == null ? null : stepsJsonValue.isArray();
+        if (stepResultsArray != null) {
             FlowPanel stepList = new FlowPanel();
             stepList.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
             stepList.getElement().getStyle().setProperty(BaseStyle.Key.GAP, "4px");
@@ -160,13 +160,13 @@ public final class CollectionRunnerView {
             stepList.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "8px");
             stepList.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_BG);
 
-            for (int i = 0; i < stepsArr.size(); i++) {
-                JSONObject s = stepsArr.get(i).isObject();
-                if (s == null) continue;
-                boolean stepPassed = s.get("passed").isBoolean().booleanValue();
-                String sid  = s.get("stepIdentifier").isString().stringValue();
-                long sdur   = (long) s.get("durationMs").isNumber().doubleValue();
-                int scode   = (int) s.get("statusCode").isNumber().doubleValue();
+            for (int i = 0; i < stepResultsArray.size(); i++) {
+                JSONObject stepResult = stepResultsArray.get(i).isObject();
+                if (stepResult == null) continue;
+                boolean stepPassed    = stepResult.get("passed").isBoolean().booleanValue();
+                String stepIdentifier = stepResult.get("stepIdentifier").isString().stringValue();
+                long stepDurationMs   = (long) stepResult.get("durationMs").isNumber().doubleValue();
+                int stepStatusCode    = (int) stepResult.get("statusCode").isNumber().doubleValue();
 
                 FlowPanel row = new FlowPanel();
                 row.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
@@ -184,12 +184,12 @@ public final class CollectionRunnerView {
                 icon.getElement().getStyle().setProperty(BaseStyle.Key.MIN_WIDTH,   "16px");
                 icon.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "12px");
 
-                Label name = new Label(sid);
+                Label name = new Label(stepIdentifier);
                 name.getElement().getStyle().setProperty(BaseStyle.Key.FLEX,      "1");
                 name.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "12px");
                 name.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,     Theme.COLOR_TEXT);
 
-                Label meta = new Label(scode + "  " + sdur + " ms");
+                Label meta = new Label(stepStatusCode + "  " + stepDurationMs + " ms");
                 meta.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "11px");
                 meta.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,       Theme.COLOR_MUTED);
                 meta.getElement().getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, Theme.FONT_MONO);
@@ -203,11 +203,11 @@ public final class CollectionRunnerView {
         }
 
         // View report button
-        Button viewBtn = UiFactory.outlineButton("View Full Report ↗");
-        viewBtn.getElement().getStyle().setProperty(BaseStyle.Key.CURSOR, BaseStyle.Value.POINTER);
-        viewBtn.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEMPLATE);
-        viewBtn.addClickHandler(e -> openReportInNewTab(reportUrl));
-        card.add(viewBtn);
+        Button viewReportButton = UiFactory.outlineButton("View Full Report ↗");
+        viewReportButton.getElement().getStyle().setProperty(BaseStyle.Key.CURSOR, BaseStyle.Value.POINTER);
+        viewReportButton.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEMPLATE);
+        viewReportButton.addClickHandler(event -> openReportInNewTab(reportUrl));
+        card.add(viewReportButton);
 
         overlay.add(card);
         state.root.add(overlay);
@@ -218,26 +218,26 @@ public final class CollectionRunnerView {
     // -------------------------------------------------------------------------
 
     public FlowPanel statBadge(String label, String value, String color) {
-        FlowPanel p = new FlowPanel();
-        p.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_SECTION);
-        p.getElement().getStyle().setProperty(BaseStyle.Key.BORDER,           "1px solid " + Theme.COLOR_BORDER);
-        p.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_TOP,       "3px solid " + color);
-        p.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS,    "8px");
-        p.getElement().getStyle().setProperty(BaseStyle.Key.PADDING,          "10px 8px");
-        p.getElement().getStyle().setProperty(BaseStyle.Key.TEXT_ALIGN,       BaseStyle.Value.CENTER);
+        FlowPanel badgePanel = new FlowPanel();
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_SECTION);
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER,           "1px solid " + Theme.COLOR_BORDER);
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_TOP,       "3px solid " + color);
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS,    "8px");
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.PADDING,          "10px 8px");
+        badgePanel.getElement().getStyle().setProperty(BaseStyle.Key.TEXT_ALIGN,       BaseStyle.Value.CENTER);
 
-        Label v = new Label(value);
-        v.getElement().getStyle().setProperty(BaseStyle.Key.FONT_WEIGHT, "700");
-        v.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,       color);
-        v.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "18px");
+        Label valueLabel = new Label(value);
+        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_WEIGHT, "700");
+        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,       color);
+        valueLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE,   "18px");
 
-        Label l = new Label(label);
-        l.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "10px");
-        l.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,     Theme.COLOR_MUTED);
+        Label titleLabel = new Label(label);
+        titleLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, "10px");
+        titleLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR,     Theme.COLOR_MUTED);
 
-        p.add(v);
-        p.add(l);
-        return p;
+        badgePanel.add(valueLabel);
+        badgePanel.add(titleLabel);
+        return badgePanel;
     }
 
     public static native void openReportInNewTab(String url) /*-{

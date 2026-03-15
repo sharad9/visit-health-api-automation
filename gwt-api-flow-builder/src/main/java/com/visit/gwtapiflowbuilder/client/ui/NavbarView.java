@@ -25,10 +25,10 @@ public class NavbarView {
         navbar.getElement().getStyle().setProperty(BaseStyle.Key.POSITION, BaseStyle.Value.RELATIVE);
         navbar.getElement().getStyle().setProperty(BaseStyle.Key.Z_INDEX, "5");
 
-        FlowPanel left = new FlowPanel();
-        left.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
-        left.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.CENTER);
-        left.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
+        FlowPanel leftPanel = new FlowPanel();
+        leftPanel.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
+        leftPanel.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.CENTER);
+        leftPanel.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
 
         Label appIcon = new Label("▣ API");
         appIcon.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_140);
@@ -47,13 +47,13 @@ public class NavbarView {
         titleWrap.add(title);
         titleWrap.add(subtitle);
 
-        left.add(appIcon);
-        left.add(titleWrap);
+        leftPanel.add(appIcon);
+        leftPanel.add(titleWrap);
 
-        FlowPanel right = new FlowPanel();
-        right.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
-        right.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.CENTER);
-        right.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
+        FlowPanel rightPanel = new FlowPanel();
+        rightPanel.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
+        rightPanel.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.CENTER);
+        rightPanel.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
 
         runButton = UiFactory.outlineButton("▶ Run Collection");
         runButton.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
@@ -93,16 +93,16 @@ public class NavbarView {
         productTag.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
         productTag.getElement().getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, "monospace");
         productTag.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_MUTED);
-        right.add(runButton);
-        right.add(saveButton);
-        right.add(toggleButton);
+        rightPanel.add(runButton);
+        rightPanel.add(saveButton);
+        rightPanel.add(toggleButton);
         if (flowSelect != null) {
-            right.add(flowSelect);
+            rightPanel.add(flowSelect);
         }
-        right.add(productTag);
+        rightPanel.add(productTag);
 
-        navbar.add(left);
-        navbar.add(right);
+        navbar.add(leftPanel);
+        navbar.add(rightPanel);
         return navbar;
     }
 }

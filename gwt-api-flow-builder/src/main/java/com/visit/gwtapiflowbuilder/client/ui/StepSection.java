@@ -55,14 +55,14 @@ public final class StepSection {
             stepsList.add(stepCard(data));
         }
 
-        Button add = UiFactory.outlineButton("＋ Add Step");
-        add.addClickHandler(event -> {
+        Button addStepButton = UiFactory.outlineButton("＋ Add Step");
+        addStepButton.addClickHandler(event -> {
             stepsList.add(stepCard(new StepData("STEP_" + (state.stepCounter + 1), "GET", "{{BASE_URL}}/resource")));
             if (state.onUpdate != null) state.onUpdate.run();
         });
 
         body.add(stepsList);
-        body.add(add);
+        body.add(addStepButton);
         return body;
     }
 
@@ -121,24 +121,24 @@ public final class StepSection {
         stepBody.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
         stepBody.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, Theme.PAD_SECTION_BODY);
 
-        Button toggle = UiFactory.ghostButton("Close");
-        toggle.getElement().getStyle().setProperty(BaseStyle.Key.BORDER, "1px solid " + Theme.COLOR_BORDER);
-        toggle.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_PANEL);
-        toggle.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
-        toggle.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
-        toggle.addClickHandler(event -> {
-            boolean open = !BaseStyle.Value.NONE.equals(
+        Button toggleStepButton = UiFactory.ghostButton("Close");
+        toggleStepButton.getElement().getStyle().setProperty(BaseStyle.Key.BORDER, "1px solid " + Theme.COLOR_BORDER);
+        toggleStepButton.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_PANEL);
+        toggleStepButton.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
+        toggleStepButton.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
+        toggleStepButton.addClickHandler(event -> {
+            boolean isOpen = !BaseStyle.Value.NONE.equals(
                 stepBody.getElement().getStyle().getProperty(BaseStyle.Key.DISPLAY));
             stepBody.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY,
-                open ? BaseStyle.Value.NONE : BaseStyle.Value.GRID);
-            toggle.setText(open ? "Open" : "Close");
+                isOpen ? BaseStyle.Value.NONE : BaseStyle.Value.GRID);
+            toggleStepButton.setText(isOpen ? "Open" : "Close");
         });
 
-        Button removeStep = UiFactory.removeButton("✖");
-        removeStep.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "28px");
-        removeStep.getElement().getStyle().setProperty(BaseStyle.Key.HEIGHT, "24px");
-        removeStep.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "0");
-        removeStep.addClickHandler(event -> {
+        Button removeStepButton = UiFactory.removeButton("✖");
+        removeStepButton.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "28px");
+        removeStepButton.getElement().getStyle().setProperty(BaseStyle.Key.HEIGHT, "24px");
+        removeStepButton.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "0");
+        removeStepButton.addClickHandler(event -> {
             int index = state.steps.indexOf(block);
             if (index >= 0) {
                 state.steps.remove(index);
@@ -156,32 +156,32 @@ public final class StepSection {
         headerRight.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.FLEX);
         headerRight.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.CENTER);
         headerRight.getElement().getStyle().setProperty(BaseStyle.Key.GAP, "6px");
-        Button runBtn = UiFactory.ghostButton("▶ Run");
-        runBtn.addClickHandler(event -> stepRunner.runStep(block, runBtn));
-        headerRight.add(runBtn);
-        headerRight.add(toggle);
-        headerRight.add(removeStep);
+        Button runStepButton = UiFactory.ghostButton("▶ Run");
+        runStepButton.addClickHandler(event -> stepRunner.runStep(block, runStepButton));
+        headerRight.add(runStepButton);
+        headerRight.add(toggleStepButton);
+        headerRight.add(removeStepButton);
         headerRow.add(headerRight);
         step.add(headerRow);
         step.add(stepBody);
 
         // Step identifier
-        FlowPanel idRow = formBuilder.row();
-        idRow.add(UiFactory.field("Step Identifier", tokenRenderer.previewToggle(block.stepId)));
-        stepBody.add(idRow);
+        FlowPanel stepIdentifierRow = formBuilder.row();
+        stepIdentifierRow.add(UiFactory.field("Step Identifier", tokenRenderer.previewToggle(block.stepId)));
+        stepBody.add(stepIdentifierRow);
 
         // Method + URL
-        FlowPanel row = formBuilder.row("140px 1fr");
+        FlowPanel methodUrlRow = formBuilder.row("140px 1fr");
         block.method = formBuilder.select("GET", "POST", "PUT", "DELETE");
         block.method.setSelectedIndex(formBuilder.indexOf(block.method, data.method));
         block.url = formBuilder.textBoxNoPreview(data.url, "{{BASE_URL}}/resource");
-        row.add(UiFactory.field("HTTP Method", block.method));
+        methodUrlRow.add(UiFactory.field("HTTP Method", block.method));
 
-        FlowPanel urlCell = new FlowPanel();
-        urlCell.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
-        urlCell.getElement().getStyle().setProperty(BaseStyle.Key.GRID_TEMPLATE_COLUMNS, "1fr");
-        urlCell.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
-        urlCell.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.FLEX_START);
+        FlowPanel urlFieldContainer = new FlowPanel();
+        urlFieldContainer.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
+        urlFieldContainer.getElement().getStyle().setProperty(BaseStyle.Key.GRID_TEMPLATE_COLUMNS, "1fr");
+        urlFieldContainer.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
+        urlFieldContainer.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_ITEMS, BaseStyle.Value.FLEX_START);
 
         FlowPanel urlInputWrap = UiFactory.field("Request URL", block.url);
         urlInputWrap.getElement().getStyle().setProperty(BaseStyle.Key.MIN_WIDTH, "0");
@@ -234,20 +234,20 @@ public final class StepSection {
             }
         });
 
-        urlCell.add(urlInputWrap);
-        urlCell.add(urlPreviewField);
-        row.add(urlCell);
-        stepBody.add(row);
+        urlFieldContainer.add(urlInputWrap);
+        urlFieldContainer.add(urlPreviewField);
+        methodUrlRow.add(urlFieldContainer);
+        stepBody.add(methodUrlRow);
 
         // Retry/timeout
-        FlowPanel retryRow = formBuilder.row();
+        FlowPanel retryConfigRow = formBuilder.row();
         block.timeoutMs = formBuilder.numberBox(emptyIfNull(data.timeoutMs, "10000"));
         block.retryCount = formBuilder.numberBox(emptyIfNull(data.retryCount, "2"));
         block.retryDelay = formBuilder.numberBox(emptyIfNull(data.retryDelay, "500"));
-        retryRow.add(UiFactory.field("Timeout (ms)", tokenRenderer.previewToggle(block.timeoutMs)));
-        retryRow.add(UiFactory.field("Retry Count", tokenRenderer.previewToggle(block.retryCount)));
-        retryRow.add(UiFactory.field("Retry Delay", tokenRenderer.previewToggle(block.retryDelay)));
-        stepBody.add(retryRow);
+        retryConfigRow.add(UiFactory.field("Timeout (ms)", tokenRenderer.previewToggle(block.timeoutMs)));
+        retryConfigRow.add(UiFactory.field("Retry Count", tokenRenderer.previewToggle(block.retryCount)));
+        retryConfigRow.add(UiFactory.field("Retry Delay", tokenRenderer.previewToggle(block.retryDelay)));
+        stepBody.add(retryConfigRow);
 
         stepBody.add(formBuilder.keyValueSection("Headers", block.headers, data.headers));
         stepBody.add(formBuilder.keyValueSection("Request Variables", block.requestVariables, data.requestVariables));
@@ -293,29 +293,29 @@ public final class StepSection {
         section.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
         section.add(UiFactory.smallLabel("Checks"));
 
-        FlowPanel list = new FlowPanel();
-        list.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
-        list.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
-        section.add(list);
+        FlowPanel checkRowsContainer = new FlowPanel();
+        checkRowsContainer.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
+        checkRowsContainer.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
+        section.add(checkRowsContainer);
 
-        Button add = UiFactory.ghostButton("＋ Add Check");
-        add.addClickHandler(event -> {
-            CheckRow row = newCheckRow(new CheckData("status", "", "", false));
-            block.checks.add(row);
-            list.add(row.container());
+        Button addCheckButton = UiFactory.ghostButton("＋ Add Check");
+        addCheckButton.addClickHandler(event -> {
+            CheckRow checkRow = newCheckRow(new CheckData("status", "", "", false));
+            block.checks.add(checkRow);
+            checkRowsContainer.add(checkRow.container());
             if (state.onUpdate != null) state.onUpdate.run();
         });
-        section.add(add);
+        section.add(addCheckButton);
 
         if (checksData == null || checksData.isEmpty()) {
-            CheckRow initial = newCheckRow(new CheckData("status", "", "", false));
-            block.checks.add(initial);
-            list.add(initial.container());
+            CheckRow initialCheckRow = newCheckRow(new CheckData("status", "", "", false));
+            block.checks.add(initialCheckRow);
+            checkRowsContainer.add(initialCheckRow.container());
         } else {
-            for (CheckData cd : checksData) {
-                CheckRow row = newCheckRow(cd);
-                block.checks.add(row);
-                list.add(row.container());
+            for (CheckData checkData : checksData) {
+                CheckRow checkRow = newCheckRow(checkData);
+                block.checks.add(checkRow);
+                checkRowsContainer.add(checkRow.container());
             }
         }
         return section;
@@ -327,22 +327,22 @@ public final class StepSection {
         section.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
         section.add(UiFactory.smallLabel("Last Response"));
 
-        Label area = new Label();
-        area.getElement().getStyle().setProperty(BaseStyle.Key.MIN_HEIGHT, "120px");
-        area.getElement().getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, Theme.FONT_MONO);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_78);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.WHITE_SPACE, BaseStyle.Value.PRE_WRAP);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.OVERFLOW_WRAP, "break-word");
-        area.getElement().getStyle().setProperty(BaseStyle.Key.WORD_BREAK, "break-all");
-        area.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, Theme.PAD_INPUT);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.BORDER, "1.5px solid " + Theme.COLOR_BORDER);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "8px");
-        area.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_SECTION);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
-        area.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "100%");
-        area.getElement().getStyle().setProperty(BaseStyle.Key.BOX_SIZING, "border-box");
-        section.add(area);
-        block.runResponse = area;
+        Label responseDisplayLabel = new Label();
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.MIN_HEIGHT, "120px");
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, Theme.FONT_MONO);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_78);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.WHITE_SPACE, BaseStyle.Value.PRE_WRAP);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.OVERFLOW_WRAP, "break-word");
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.WORD_BREAK, "break-all");
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, Theme.PAD_INPUT);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER, "1.5px solid " + Theme.COLOR_BORDER);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "8px");
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_SECTION);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "100%");
+        responseDisplayLabel.getElement().getStyle().setProperty(BaseStyle.Key.BOX_SIZING, "border-box");
+        section.add(responseDisplayLabel);
+        block.runResponse = responseDisplayLabel;
         return section;
     }
 

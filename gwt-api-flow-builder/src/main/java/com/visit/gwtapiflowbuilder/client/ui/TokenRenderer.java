@@ -44,21 +44,21 @@ public final class TokenRenderer {
         if (state.tokenTooltip != null) {
             return;
         }
-        Element el = Document.get().createDivElement();
-        el.getStyle().setProperty(BaseStyle.Key.POSITION, "absolute");
-        el.getStyle().setProperty(BaseStyle.Key.Z_INDEX, "9999");
-        el.getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, "#1f1f1f");
-        el.getStyle().setProperty(BaseStyle.Key.COLOR, "#F8FAFC");
-        el.getStyle().setProperty(BaseStyle.Key.BORDER, "1px solid rgba(255,255,255,0.08)");
-        el.getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "10px");
-        el.getStyle().setProperty(BaseStyle.Key.PADDING, "10px 12px");
-        el.getStyle().setProperty(BaseStyle.Key.BOX_SHADOW, "0 10px 30px rgba(0,0,0,0.35)");
-        el.getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, Theme.FONT_MONO);
-        el.getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_78);
-        el.getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.NONE);
-        el.getStyle().setProperty(BaseStyle.Key.POINTER_EVENTS, BaseStyle.Value.NONE);
-        RootPanel.get().getElement().appendChild(el);
-        state.tokenTooltip = el;
+        Element tooltipElement = Document.get().createDivElement();
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.POSITION, "absolute");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.Z_INDEX, "9999");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, "#1f1f1f");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.COLOR, "#F8FAFC");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.BORDER, "1px solid rgba(255,255,255,0.08)");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.BORDER_RADIUS, "10px");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.PADDING, "10px 12px");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.BOX_SHADOW, "0 10px 30px rgba(0,0,0,0.35)");
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.FONT_FAMILY, Theme.FONT_MONO);
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_78);
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.NONE);
+        tooltipElement.getStyle().setProperty(BaseStyle.Key.POINTER_EVENTS, BaseStyle.Value.NONE);
+        RootPanel.get().getElement().appendChild(tooltipElement);
+        state.tokenTooltip = tooltipElement;
     }
 
     public void showTokenTooltip(String token, Element target) {
@@ -114,25 +114,25 @@ public final class TokenRenderer {
         if (text == null || text.isEmpty()) {
             return "";
         }
-        StringBuilder out = new StringBuilder();
-        int index = 0;
-        while (index < text.length()) {
-            int start = text.indexOf("{{", index);
+        StringBuilder resolvedText = new StringBuilder();
+        int parseIndex = 0;
+        while (parseIndex < text.length()) {
+            int start = text.indexOf("{{", parseIndex);
             if (start < 0) {
-                out.append(text.substring(index));
+                resolvedText.append(text.substring(parseIndex));
                 break;
             }
             int end = text.indexOf("}}", start + 2);
             if (end < 0) {
-                out.append(text.substring(index));
+                resolvedText.append(text.substring(parseIndex));
                 break;
             }
-            out.append(text.substring(index, start));
+            resolvedText.append(text.substring(parseIndex, start));
             String token = text.substring(start, end + 2);
-            out.append(resolveTokenValue(token));
-            index = end + 2;
+            resolvedText.append(resolveTokenValue(token));
+            parseIndex = end + 2;
         }
-        return out.toString();
+        return resolvedText.toString();
     }
 
     // -------------------------------------------------------------------------

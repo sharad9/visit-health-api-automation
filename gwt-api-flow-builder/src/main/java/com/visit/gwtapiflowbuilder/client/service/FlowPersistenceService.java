@@ -42,10 +42,10 @@ public final class FlowPersistenceService {
         }
         final String flowName = resolvedName;
 
-        Button saveBtn = state.navbarView != null ? state.navbarView.saveButton : null;
-        if (saveBtn != null) {
-            saveBtn.setText("Saving…");
-            saveBtn.setEnabled(false);
+        Button saveButton = state.navbarView != null ? state.navbarView.saveButton : null;
+        if (saveButton != null) {
+            saveButton.setText("Saving…");
+            saveButton.setEnabled(false);
         }
 
         JSONObject payload = new JSONObject();
@@ -65,13 +65,13 @@ public final class FlowPersistenceService {
                         loadFlowList();
                         selectFlowName(flowName);
                     }
-                    if (saveBtn != null) {
-                        saveBtn.setText("✓ Saved");
-                        saveBtn.setEnabled(true);
+                    if (saveButton != null) {
+                        saveButton.setText("✓ Saved");
+                        saveButton.setEnabled(true);
                         new Timer() {
                             @Override
                             public void run() {
-                                saveBtn.setText("Save");
+                                saveButton.setText("Save");
                             }
                         }.schedule(2000);
                     }
@@ -79,16 +79,16 @@ public final class FlowPersistenceService {
 
                 @Override
                 public void onError(Request request, Throwable exception) {
-                    if (saveBtn != null) {
-                        saveBtn.setText("Save");
-                        saveBtn.setEnabled(true);
+                    if (saveButton != null) {
+                        saveButton.setText("Save");
+                        saveButton.setEnabled(true);
                     }
                 }
             });
         } catch (Exception ignore) {
-            if (saveBtn != null) {
-                saveBtn.setText("Save");
-                saveBtn.setEnabled(true);
+            if (saveButton != null) {
+                saveButton.setText("Save");
+                saveButton.setEnabled(true);
             }
         }
     }
@@ -145,22 +145,22 @@ public final class FlowPersistenceService {
                     if (response.getStatusCode() != 200) {
                         return;
                     }
-                    JSONValue value;
+                    JSONValue parsedJsonValue;
                     try {
-                        value = JSONParser.parseStrict(response.getText());
-                    } catch (Exception ex) {
+                        parsedJsonValue = JSONParser.parseStrict(response.getText());
+                    } catch (Exception parseException) {
                         return;
                     }
-                    JSONArray arr = value.isArray();
-                    if (arr == null || state.flowSelect == null) {
+                    JSONArray flowNamesArray = parsedJsonValue.isArray();
+                    if (flowNamesArray == null || state.flowSelect == null) {
                         return;
                     }
                     state.flowSelect.clear();
                     state.flowSelect.addItem("Load flow...");
-                    for (int i = 0; i < arr.size(); i++) {
-                        JSONObject obj = arr.get(i).isObject();
-                        if (obj == null) continue;
-                        String name = FlowParser.stringValue(obj.get("name"), "");
+                    for (int i = 0; i < flowNamesArray.size(); i++) {
+                        JSONObject flowItem = flowNamesArray.get(i).isObject();
+                        if (flowItem == null) continue;
+                        String name = FlowParser.stringValue(flowItem.get("name"), "");
                         if (!name.isEmpty()) {
                             state.flowSelect.addItem(name);
                         }

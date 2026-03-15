@@ -36,7 +36,7 @@ public final class FlowParser {
         JSONValue rootValue;
         try {
             rootValue = JSONParser.parseStrict(text);
-        } catch (Exception e) {
+        } catch (Exception parseException) {
             return null;
         }
         JSONObject root = rootValue.isObject();
@@ -49,20 +49,20 @@ public final class FlowParser {
         data.metaId = stringValue(metadata == null ? null : metadata.get("identifier"), "default.flow.meta");
         data.metaVersion = stringValue(metadata == null ? null : metadata.get("version"), "1.0");
 
-        JSONObject envsObj = object(root.get("environments"));
-        String activeEnvId = stringValue(envsObj == null ? null : envsObj.get("activeEnvironmentId"), "");
-        List<EnvironmentItem> parsedEnvs = parseEnvironmentItems(envsObj);
-        if (parsedEnvs.isEmpty()) {
-            parsedEnvs = cloneEnvironments(fallbackEnvironments);
+        JSONObject environmentsObject = object(root.get("environments"));
+        String activeEnvId = stringValue(environmentsObject == null ? null : environmentsObject.get("activeEnvironmentId"), "");
+        List<EnvironmentItem> parsedEnvironments = parseEnvironmentItems(environmentsObject);
+        if (parsedEnvironments.isEmpty()) {
+            parsedEnvironments = cloneEnvironments(fallbackEnvironments);
         }
-        data.environments = parsedEnvs;
-        data.activeEnvIndex = findEnvironmentIndex(parsedEnvs, activeEnvId);
+        data.environments = parsedEnvironments;
+        data.activeEnvIndex = findEnvironmentIndex(parsedEnvironments, activeEnvId);
 
         JSONObject globalInputs = object(root.get("globalInputs"));
         data.globalInputs = parseObjectPairs(globalInputs);
 
-        JSONArray stepsArr = array(root.get("steps"));
-        data.steps = parseSteps(stepsArr);
+        JSONArray stepsJsonArray = array(root.get("steps"));
+        data.steps = parseSteps(stepsJsonArray);
 
         return data;
     }
@@ -71,97 +71,97 @@ public final class FlowParser {
     // Parse helpers
     // -------------------------------------------------------------------------
 
-    public static List<EnvironmentItem> parseEnvironmentItems(JSONObject envsObj) {
+    public static List<EnvironmentItem> parseEnvironmentItems(JSONObject environmentsObject) {
         List<EnvironmentItem> items = new ArrayList<>();
-        JSONArray envItems = envsObj == null ? null : array(envsObj.get("environmentItems"));
-        if (envItems == null) {
+        JSONArray environmentItemsArray = environmentsObject == null ? null : array(environmentsObject.get("environmentItems"));
+        if (environmentItemsArray == null) {
             return items;
         }
-        for (int i = 0; i < envItems.size(); i++) {
-            JSONObject envJson = object(envItems.get(i));
-            if (envJson == null) {
+        for (int i = 0; i < environmentItemsArray.size(); i++) {
+            JSONObject environmentJson = object(environmentItemsArray.get(i));
+            if (environmentJson == null) {
                 continue;
             }
-            String id = stringValue(envJson.get("environmentId"), String.valueOf(i + 1));
-            String name = stringValue(envJson.get("environmentName"), "ENV_" + (i + 1));
-            String baseUrl = stringValue(envJson.get("baseUrl"), "");
+            String id = stringValue(environmentJson.get("environmentId"), String.valueOf(i + 1));
+            String name = stringValue(environmentJson.get("environmentName"), "ENV_" + (i + 1));
+            String baseUrl = stringValue(environmentJson.get("baseUrl"), "");
 
-            JSONObject defaults = object(envJson.get("defaults"));
+            JSONObject defaults = object(environmentJson.get("defaults"));
             String timeout = stringValue(defaults == null ? null : defaults.get("timeoutMilliseconds"), "");
-            JSONObject retry = object(defaults == null ? null : defaults.get("retryPolicy"));
-            String retryCount = stringValue(retry == null ? null : retry.get("maximumAttempts"), "");
-            String retryDelay = stringValue(retry == null ? null : retry.get("delayMilliseconds"), "");
+            JSONObject retryPolicy = object(defaults == null ? null : defaults.get("retryPolicy"));
+            String retryCount = stringValue(retryPolicy == null ? null : retryPolicy.get("maximumAttempts"), "");
+            String retryDelay = stringValue(retryPolicy == null ? null : retryPolicy.get("delayMilliseconds"), "");
 
             EnvironmentItem env = new EnvironmentItem(id, name, baseUrl, timeout, retryCount, retryDelay);
-            env.variables = parseObjectPairs(object(envJson.get("environmentVariables")));
+            env.variables = parseObjectPairs(object(environmentJson.get("environmentVariables")));
             items.add(env);
         }
         return items;
     }
 
-    public static List<KeyValuePair> parseObjectPairs(JSONObject obj) {
+    public static List<KeyValuePair> parseObjectPairs(JSONObject jsonObject) {
         List<KeyValuePair> pairs = new ArrayList<>();
-        if (obj == null) {
+        if (jsonObject == null) {
             return pairs;
         }
-        for (String key : obj.keySet()) {
-            pairs.add(new KeyValuePair(key, stringValue(obj.get(key), "")));
+        for (String key : jsonObject.keySet()) {
+            pairs.add(new KeyValuePair(key, stringValue(jsonObject.get(key), "")));
         }
         return pairs;
     }
 
-    public static List<StepData> parseSteps(JSONArray stepsArr) {
-        List<StepData> list = new ArrayList<>();
-        if (stepsArr == null) {
-            return list;
+    public static List<StepData> parseSteps(JSONArray stepsJsonArray) {
+        List<StepData> stepDataList = new ArrayList<>();
+        if (stepsJsonArray == null) {
+            return stepDataList;
         }
-        for (int i = 0; i < stepsArr.size(); i++) {
-            JSONObject stepObj = object(stepsArr.get(i));
-            if (stepObj == null) {
+        for (int i = 0; i < stepsJsonArray.size(); i++) {
+            JSONObject stepObject = object(stepsJsonArray.get(i));
+            if (stepObject == null) {
                 continue;
             }
-            String stepId = stringValue(stepObj.get("stepIdentifier"), "STEP_" + (i + 1));
-            JSONObject request = object(stepObj.get("request"));
-            String method = stringValue(request == null ? null : request.get("httpMethod"), "GET");
-            String url = stringValue(request == null ? null : request.get("requestUrl"), "");
+            String stepId = stringValue(stepObject.get("stepIdentifier"), "STEP_" + (i + 1));
+            JSONObject requestObject = object(stepObject.get("request"));
+            String method = stringValue(requestObject == null ? null : requestObject.get("httpMethod"), "GET");
+            String url = stringValue(requestObject == null ? null : requestObject.get("requestUrl"), "");
             StepData data = new StepData(stepId, method, url);
-            data.timeoutMs = stringValue(request == null ? null : request.get("timeoutMilliseconds"), "");
-            JSONObject retry = object(request == null ? null : request.get("retryPolicy"));
-            data.retryCount = stringValue(retry == null ? null : retry.get("maximumAttempts"), "");
-            data.retryDelay = stringValue(retry == null ? null : retry.get("delayMilliseconds"), "");
-            data.headers = parseObjectPairs(object(request == null ? null : request.get("headers")));
-            data.requestVariables = parseObjectPairs(object(request == null ? null : request.get("requestVariables")));
-            data.body = parseObjectPairs(object(request == null ? null : request.get("body")));
+            data.timeoutMs = stringValue(requestObject == null ? null : requestObject.get("timeoutMilliseconds"), "");
+            JSONObject retryPolicy = object(requestObject == null ? null : requestObject.get("retryPolicy"));
+            data.retryCount = stringValue(retryPolicy == null ? null : retryPolicy.get("maximumAttempts"), "");
+            data.retryDelay = stringValue(retryPolicy == null ? null : retryPolicy.get("delayMilliseconds"), "");
+            data.headers = parseObjectPairs(object(requestObject == null ? null : requestObject.get("headers")));
+            data.requestVariables = parseObjectPairs(object(requestObject == null ? null : requestObject.get("requestVariables")));
+            data.body = parseObjectPairs(object(requestObject == null ? null : requestObject.get("body")));
 
-            JSONObject extraction = object(stepObj.get("extraction"));
-            data.extractBody = parseObjectPairs(object(extraction == null ? null : extraction.get("bodyJsonPaths")));
-            data.extractHeaders = parseObjectPairs(object(extraction == null ? null : extraction.get("headerValues")));
+            JSONObject extractionObject = object(stepObject.get("extraction"));
+            data.extractBody = parseObjectPairs(object(extractionObject == null ? null : extractionObject.get("bodyJsonPaths")));
+            data.extractHeaders = parseObjectPairs(object(extractionObject == null ? null : extractionObject.get("headerValues")));
 
-            data.checks = parseChecks(array(stepObj.get("checks")));
-            list.add(data);
+            data.checks = parseChecks(array(stepObject.get("checks")));
+            stepDataList.add(data);
         }
-        return list;
+        return stepDataList;
     }
 
-    public static List<CheckData> parseChecks(JSONArray checksArr) {
-        List<CheckData> list = new ArrayList<>();
-        if (checksArr == null) {
-            return list;
+    public static List<CheckData> parseChecks(JSONArray checksJsonArray) {
+        List<CheckData> checkDataList = new ArrayList<>();
+        if (checksJsonArray == null) {
+            return checkDataList;
         }
-        for (int i = 0; i < checksArr.size(); i++) {
-            JSONObject checkObj = object(checksArr.get(i));
-            if (checkObj == null) {
+        for (int i = 0; i < checksJsonArray.size(); i++) {
+            JSONObject checkObject = object(checksJsonArray.get(i));
+            if (checkObject == null) {
                 continue;
             }
             CheckData data = new CheckData(
-                    stringValue(checkObj.get("source"), "status"),
-                    stringValue(checkObj.get("jsonPath"), ""),
-                    stringValue(checkObj.get("equals"), ""),
-                    booleanValue(checkObj.get("exists"))
+                    stringValue(checkObject.get("source"), "status"),
+                    stringValue(checkObject.get("jsonPath"), ""),
+                    stringValue(checkObject.get("equals"), ""),
+                    booleanValue(checkObject.get("exists"))
             );
-            list.add(data);
+            checkDataList.add(data);
         }
-        return list;
+        return checkDataList;
     }
 
     public static List<EnvironmentItem> cloneEnvironments(List<EnvironmentItem> source) {
@@ -175,15 +175,15 @@ public final class FlowParser {
         return copy;
     }
 
-    public static int findEnvironmentIndex(List<EnvironmentItem> envs, String activeEnvId) {
-        if (envs.isEmpty()) {
+    public static int findEnvironmentIndex(List<EnvironmentItem> environments, String activeEnvId) {
+        if (environments.isEmpty()) {
             return 0;
         }
         if (activeEnvId == null || activeEnvId.trim().isEmpty()) {
             return 0;
         }
-        for (int i = 0; i < envs.size(); i++) {
-            if (activeEnvId.equals(envs.get(i).id)) {
+        for (int i = 0; i < environments.size(); i++) {
+            if (activeEnvId.equals(environments.get(i).id)) {
                 return i;
             }
         }

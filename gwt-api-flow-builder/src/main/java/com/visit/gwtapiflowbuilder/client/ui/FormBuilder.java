@@ -119,20 +119,20 @@ public final class FormBuilder {
         Label label = UiFactory.smallLabel(title);
         section.add(label);
 
-        FlowPanel list = new FlowPanel();
-        list.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
-        list.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
-        section.add(list);
+        FlowPanel rowsContainer = new FlowPanel();
+        rowsContainer.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
+        rowsContainer.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
+        section.add(rowsContainer);
 
-        Button add = UiFactory.ghostButton("＋ Add");
-        add.addClickHandler(event -> {
-            addKeyValueRow(list, rows, "", "", "key", "value");
+        Button addRowButton = UiFactory.ghostButton("＋ Add");
+        addRowButton.addClickHandler(event -> {
+            addKeyValueRow(rowsContainer, rows, "", "", "key", "value");
             if (state.onUpdate != null) state.onUpdate.run();
         });
 
-        populateKeyValueRows(list, rows, initialPairs, "key", "value");
+        populateKeyValueRows(rowsContainer, rows, initialPairs, "key", "value");
 
-        section.add(add);
+        section.add(addRowButton);
         return section;
     }
 
@@ -164,17 +164,17 @@ public final class FormBuilder {
         container.add(tokenRenderer.previewToggle(row.key));
         container.add(tokenRenderer.previewToggle(row.value));
 
-        Button remove = UiFactory.removeButton("✖");
-        remove.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "32px");
-        remove.getElement().getStyle().setProperty(BaseStyle.Key.HEIGHT, "28px");
-        remove.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "0");
-        remove.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_SELF, BaseStyle.Value.CENTER);
-        remove.addClickHandler(event -> {
+        Button removeRowButton = UiFactory.removeButton("✖");
+        removeRowButton.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "32px");
+        removeRowButton.getElement().getStyle().setProperty(BaseStyle.Key.HEIGHT, "28px");
+        removeRowButton.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "0");
+        removeRowButton.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_SELF, BaseStyle.Value.CENTER);
+        removeRowButton.addClickHandler(event -> {
             rows.remove(row);
             list.remove(container);
             if (state.onUpdate != null) state.onUpdate.run();
         });
-        container.add(remove);
+        container.add(removeRowButton);
         return container;
     }
 
@@ -211,9 +211,9 @@ public final class FormBuilder {
     // -------------------------------------------------------------------------
 
     public int indexOf(ListBox listBox, String value) {
-        for (int i = 0; i < listBox.getItemCount(); i++) {
-            if (listBox.getItemText(i).equalsIgnoreCase(value)) {
-                return i;
+        for (int selectedIndex = 0; selectedIndex < listBox.getItemCount(); selectedIndex++) {
+            if (listBox.getItemText(selectedIndex).equalsIgnoreCase(value)) {
+                return selectedIndex;
             }
         }
         return 0;
@@ -223,11 +223,11 @@ public final class FormBuilder {
         if (listBox == null) {
             return "";
         }
-        int idx = listBox.getSelectedIndex();
-        if (idx < 0 || idx >= listBox.getItemCount()) {
+        int selectedIndex = listBox.getSelectedIndex();
+        if (selectedIndex < 0 || selectedIndex >= listBox.getItemCount()) {
             return "";
         }
-        return listBox.getItemText(idx);
+        return listBox.getItemText(selectedIndex);
     }
 
     public List<KeyValuePair> toPairs(List<KeyValueRow> rows) {

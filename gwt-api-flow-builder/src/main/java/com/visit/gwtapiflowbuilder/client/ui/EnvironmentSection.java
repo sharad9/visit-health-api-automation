@@ -35,65 +35,65 @@ public final class EnvironmentSection {
         body.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
         body.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
 
-        Button addEnv = UiFactory.outlineButton("＋ Add Environment");
-        addEnv.addClickHandler(event -> addEnvironment());
-        Button removeEnv = UiFactory.removeButton("✖");
-        removeEnv.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "28px");
-        removeEnv.getElement().getStyle().setProperty(BaseStyle.Key.HEIGHT, "24px");
-        removeEnv.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "0");
-        removeEnv.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_SELF, BaseStyle.Value.CENTER);
-        removeEnv.addClickHandler(event -> removeEnvironment());
+        Button addEnvironmentButton = UiFactory.outlineButton("＋ Add Environment");
+        addEnvironmentButton.addClickHandler(event -> addEnvironment());
+        Button removeEnvironmentButton = UiFactory.removeButton("✖");
+        removeEnvironmentButton.getElement().getStyle().setProperty(BaseStyle.Key.WIDTH, "28px");
+        removeEnvironmentButton.getElement().getStyle().setProperty(BaseStyle.Key.HEIGHT, "24px");
+        removeEnvironmentButton.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, "0");
+        removeEnvironmentButton.getElement().getStyle().setProperty(BaseStyle.Key.ALIGN_SELF, BaseStyle.Value.CENTER);
+        removeEnvironmentButton.addClickHandler(event -> removeEnvironment());
 
-        FlowPanel row1 = formBuilder.row("auto 1fr auto");
+        FlowPanel environmentSelectorRow = formBuilder.row("auto 1fr auto");
         state.envSelect = formBuilder.selectEnvironments();
-        row1.add(addEnv);
-        row1.add(UiFactory.field("Active Environment", state.envSelect));
+        environmentSelectorRow.add(addEnvironmentButton);
+        environmentSelectorRow.add(UiFactory.field("Active Environment", state.envSelect));
 
-        FlowPanel rowName = new FlowPanel();
-        rowName.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
-        rowName.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
-        FlowPanel nameLabelRow = new FlowPanel();
-        nameLabelRow.add(UiFactory.smallLabel("Environment Name"));
+        FlowPanel environmentNameSection = new FlowPanel();
+        environmentNameSection.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
+        environmentNameSection.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
+        FlowPanel nameHeaderContainer = new FlowPanel();
+        nameHeaderContainer.add(UiFactory.smallLabel("Environment Name"));
         state.envNameBox = formBuilder.textBox("", "ENV_NAME");
         state.envNameBox.setReadOnly(true);
         state.envNamePreview = tokenRenderer.tokenPreview(state.envNameBox);
-        FlowPanel nameFieldRow = formBuilder.row("1fr auto");
-        nameFieldRow.add(tokenRenderer.previewToggle(state.envNameBox, state.envNamePreview,
+        FlowPanel nameInputRow = formBuilder.row("1fr auto");
+        nameInputRow.add(tokenRenderer.previewToggle(state.envNameBox, state.envNamePreview,
                 () -> commitEnvironmentName()));
-        nameFieldRow.add(removeEnv);
-        rowName.add(nameLabelRow);
-        rowName.add(nameFieldRow);
+        nameInputRow.add(removeEnvironmentButton);
+        environmentNameSection.add(nameHeaderContainer);
+        environmentNameSection.add(nameInputRow);
 
-        FlowPanel row2 = formBuilder.row();
+        FlowPanel environmentConfigRow = formBuilder.row();
         state.timeoutBox = formBuilder.numberBox("10000");
         state.retryCountBox = formBuilder.numberBox("2");
         state.retryDelayBox = formBuilder.numberBox("500");
-        row2.add(UiFactory.field("Timeout (ms)", tokenRenderer.previewToggle(state.timeoutBox)));
-        row2.add(UiFactory.field("Retry Count", tokenRenderer.previewToggle(state.retryCountBox)));
-        row2.add(UiFactory.field("Retry Delay", tokenRenderer.previewToggle(state.retryDelayBox)));
+        environmentConfigRow.add(UiFactory.field("Timeout (ms)", tokenRenderer.previewToggle(state.timeoutBox)));
+        environmentConfigRow.add(UiFactory.field("Retry Count", tokenRenderer.previewToggle(state.retryCountBox)));
+        environmentConfigRow.add(UiFactory.field("Retry Delay", tokenRenderer.previewToggle(state.retryDelayBox)));
 
-        FlowPanel varsSection = new FlowPanel();
-        varsSection.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
-        varsSection.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
-        Label varsLabel = UiFactory.smallLabel("Environment Variables");
-        varsSection.add(varsLabel);
+        FlowPanel environmentVariablesSection = new FlowPanel();
+        environmentVariablesSection.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
+        environmentVariablesSection.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_8);
+        Label environmentVariablesLabel = UiFactory.smallLabel("Environment Variables");
+        environmentVariablesSection.add(environmentVariablesLabel);
 
         state.envVarsList = new FlowPanel();
         state.envVarsList.getElement().getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.GRID);
         state.envVarsList.getElement().getStyle().setProperty(BaseStyle.Key.GAP, Theme.GAP_6);
-        varsSection.add(state.envVarsList);
+        environmentVariablesSection.add(state.envVarsList);
 
-        Button addVar = UiFactory.ghostButton("＋ Add Variable");
-        addVar.addClickHandler(event -> {
+        Button addVariableButton = UiFactory.ghostButton("＋ Add Variable");
+        addVariableButton.addClickHandler(event -> {
             formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows, "", "", "KEY", "VALUE");
             if (state.onUpdate != null) state.onUpdate.run();
         });
-        varsSection.add(addVar);
+        environmentVariablesSection.add(addVariableButton);
 
-        body.add(row1);
-        body.add(rowName);
-        body.add(row2);
-        body.add(varsSection);
+        body.add(environmentSelectorRow);
+        body.add(environmentNameSection);
+        body.add(environmentConfigRow);
+        body.add(environmentVariablesSection);
 
         state.envSelect.addChangeHandler((ChangeHandler) event -> {
             syncActiveEnvironmentFromUi();

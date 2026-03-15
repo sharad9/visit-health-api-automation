@@ -39,20 +39,20 @@ public final class StepRunner {
     // Run a single step
     // -------------------------------------------------------------------------
 
-    public void runStep(StepBlock block, Button runBtn) {
+    public void runStep(StepBlock block, Button runButton) {
         if (block == null) {
             return;
         }
-        if (runBtn != null) {
-            runBtn.setText("Running…");
-            runBtn.setEnabled(false);
+        if (runButton != null) {
+            runButton.setText("Running…");
+            runButton.setEnabled(false);
         }
         String method = selectedText(block.method);
         if (method == null || method.trim().isEmpty()) {
             method = "GET";
         }
-        String url = tokenRenderer.replaceTokens(block.url == null ? "" : block.url.getValue());
-        if (url.trim().isEmpty()) {
+        String resolvedUrl = tokenRenderer.replaceTokens(block.url == null ? "" : block.url.getValue());
+        if (resolvedUrl.trim().isEmpty()) {
             Window.alert("Request URL is empty.");
             return;
         }
@@ -67,7 +67,7 @@ public final class StepRunner {
             httpMethod = RequestBuilder.GET;
         }
 
-        JSONObject headersObj = new JSONObject();
+        JSONObject requestHeadersObject = new JSONObject();
         boolean hasContentType = false;
         for (KeyValueRow row : block.headers) {
             String key = row.key.getValue();
@@ -75,43 +75,43 @@ public final class StepRunner {
             key = key.trim();
             if (key.isEmpty()) continue;
             String value = tokenRenderer.replaceTokens(row.value.getValue());
-            headersObj.put(key, new JSONString(value));
+            requestHeadersObject.put(key, new JSONString(value));
             if ("content-type".equalsIgnoreCase(key)) {
                 hasContentType = true;
             }
         }
 
-        JSONObject bodyObj = new JSONObject();
-        int bodyCount = 0;
+        JSONObject requestBodyObject = new JSONObject();
+        int bodyFieldCount = 0;
         for (KeyValueRow row : block.body) {
             String key = row.key.getValue();
             if (key == null) continue;
             key = key.trim();
             if (key.isEmpty()) continue;
             String value = tokenRenderer.replaceTokens(row.value.getValue());
-            bodyObj.put(key, new JSONString(value));
-            bodyCount++;
+            requestBodyObject.put(key, new JSONString(value));
+            bodyFieldCount++;
         }
-        String bodyStr = null;
-        if (bodyCount > 0) {
-            bodyStr = bodyObj.toString();
+        String serializedBody = null;
+        if (bodyFieldCount > 0) {
+            serializedBody = requestBodyObject.toString();
             if (!hasContentType) {
-                headersObj.put("Content-Type", new JSONString("application/json"));
+                requestHeadersObject.put("Content-Type", new JSONString("application/json"));
             }
         }
 
         JSONObject payload = new JSONObject();
         payload.put("method", new JSONString(httpMethod.toString()));
-        payload.put("url", new JSONString(url));
-        payload.put("headers", headersObj);
-        if (bodyStr != null) {
-            payload.put("body", new JSONString(bodyStr));
+        payload.put("url", new JSONString(resolvedUrl));
+        payload.put("headers", requestHeadersObject);
+        if (serializedBody != null) {
+            payload.put("body", new JSONString(serializedBody));
         }
 
         RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, PROXY_ENDPOINT);
         builder.setHeader("Content-Type", "application/json");
 
-        final long startMs = System.currentTimeMillis();
+        final long requestStartTimeMs = System.currentTimeMillis();
         final String startDateTime = getNativeDateTime();
         final String finalMethod = method;
 
@@ -119,43 +119,43 @@ public final class StepRunner {
             builder.sendRequest(payload.toString(), new RequestCallback() {
                 @Override
                 public void onResponseReceived(Request request, Response response) {
-                    long durationMs = System.currentTimeMillis() - startMs;
-                    if (runBtn != null) {
-                        runBtn.setText("▶ Run");
-                        runBtn.setEnabled(true);
+                    long durationMs = System.currentTimeMillis() - requestStartTimeMs;
+                    if (runButton != null) {
+                        runButton.setText("▶ Run");
+                        runButton.setEnabled(true);
                     }
-                    String text = response.getText();
-                    if (text == null || text.trim().isEmpty()) {
-                        text = "";
+                    String responseText = response.getText();
+                    if (responseText == null || responseText.trim().isEmpty()) {
+                        responseText = "";
                     }
-                    JSONObject obj;
+                    JSONObject responseObject;
                     try {
-                        obj = JSONParser.parseStrict(text).isObject();
-                    } catch (Exception ex) {
-                        obj = null;
+                        responseObject = JSONParser.parseStrict(responseText).isObject();
+                    } catch (Exception parseException) {
+                        responseObject = null;
                     }
-                    int status = response.getStatusCode();
-                    String headers = response.getHeadersAsString();
-                    String body = text;
-                    if (obj != null) {
-                        status = (int) FlowParser.numberValueOrDefault(obj.get("status"), status);
-                        headers = FlowParser.stringValue(obj.get("headers"), "");
-                        body = FlowParser.stringValue(obj.get("body"), "");
+                    int statusCode = response.getStatusCode();
+                    String responseHeaders = response.getHeadersAsString();
+                    String responseBody = responseText;
+                    if (responseObject != null) {
+                        statusCode = (int) FlowParser.numberValueOrDefault(responseObject.get("status"), statusCode);
+                        responseHeaders = FlowParser.stringValue(responseObject.get("headers"), "");
+                        responseBody = FlowParser.stringValue(responseObject.get("body"), "");
                     }
                     String stepId = block.stepId == null ? "" : block.stepId.getValue().trim();
-                    extractResponseVariables(stepId, body, headers, block);
+                    extractResponseVariables(stepId, responseBody, responseHeaders, block);
                     if (block.runResponse != null) {
-                        block.runResponse.setText(formatRunResponse(status, headers, body, durationMs, startDateTime));
+                        block.runResponse.setText(formatRunResponse(statusCode, responseHeaders, responseBody, durationMs, startDateTime));
                     } else {
-                        Window.alert("Step Run: " + response.getStatusCode() + "\n" + text);
+                        Window.alert("Step Run: " + response.getStatusCode() + "\n" + responseText);
                     }
                 }
 
                 @Override
                 public void onError(Request request, Throwable exception) {
-                    if (runBtn != null) {
-                        runBtn.setText("▶ Run");
-                        runBtn.setEnabled(true);
+                    if (runButton != null) {
+                        runButton.setText("▶ Run");
+                        runButton.setEnabled(true);
                     }
                     String message = "Step Run Failed: " + (exception == null ? "Unknown error" : exception.getMessage());
                     if (block.runResponse != null) {
@@ -165,12 +165,12 @@ public final class StepRunner {
                     }
                 }
             });
-        } catch (RequestException ex) {
-            if (runBtn != null) {
-                runBtn.setText("▶ Run");
-                runBtn.setEnabled(true);
+        } catch (RequestException requestException) {
+            if (runButton != null) {
+                runButton.setText("▶ Run");
+                runButton.setEnabled(true);
             }
-            String message = "Step Run Failed: " + ex.getMessage();
+            String message = "Step Run Failed: " + requestException.getMessage();
             if (block.runResponse != null) {
                 block.runResponse.setText(message);
             } else {
@@ -183,16 +183,16 @@ public final class StepRunner {
     // Variable extraction
     // -------------------------------------------------------------------------
 
-    public void extractResponseVariables(String stepId, String body, String headers, StepBlock block) {
+    public void extractResponseVariables(String stepId, String responseBody, String responseHeaders, StepBlock block) {
         if (stepId == null || stepId.isEmpty()) {
             return;
         }
-        JSONObject bodyObj = null;
-        if (body != null && !body.isEmpty()) {
+        JSONObject parsedResponseBody = null;
+        if (responseBody != null && !responseBody.isEmpty()) {
             try {
-                JSONValue parsed = JSONParser.parseStrict(body);
-                bodyObj = parsed.isObject();
-            } catch (Exception e) {
+                JSONValue parsed = JSONParser.parseStrict(responseBody);
+                parsedResponseBody = parsed.isObject();
+            } catch (Exception parseException) {
                 // not JSON, skip body extractions
             }
         }
@@ -204,7 +204,7 @@ public final class StepRunner {
             }
             varName = varName.trim();
             jsonPath = jsonPath.trim();
-            String extracted = resolveJsonPath(bodyObj, jsonPath);
+            String extracted = resolveJsonPath(parsedResponseBody, jsonPath);
             if (extracted != null) {
                 state.runtimeVariables.put(stepId + "_REQUEST_BODY_" + varName, extracted);
             }
@@ -217,7 +217,7 @@ public final class StepRunner {
             }
             varName = varName.trim();
             headerName = headerName.trim();
-            String extracted = extractHeaderValue(headers, headerName);
+            String extracted = extractHeaderValue(responseHeaders, headerName);
             if (extracted != null) {
                 state.runtimeVariables.put(stepId + "_REQUEST_HEADER_" + varName, extracted);
             }
@@ -240,30 +240,30 @@ public final class StepRunner {
         JSONValue current = root;
         for (String part : parts) {
             if (current == null) return null;
-            int bracketIdx = part.indexOf('[');
-            if (bracketIdx >= 0) {
-                int closeBracket = part.indexOf(']', bracketIdx);
-                if (closeBracket < 0) return null;
-                String key = part.substring(0, bracketIdx);
-                String indexStr = part.substring(bracketIdx + 1, closeBracket);
-                int index;
+            int bracketIndex = part.indexOf('[');
+            if (bracketIndex >= 0) {
+                int closeBracketIndex = part.indexOf(']', bracketIndex);
+                if (closeBracketIndex < 0) return null;
+                String key = part.substring(0, bracketIndex);
+                String arrayIndexString = part.substring(bracketIndex + 1, closeBracketIndex);
+                int arrayElementIndex;
                 try {
-                    index = Integer.parseInt(indexStr);
-                } catch (NumberFormatException e) {
+                    arrayElementIndex = Integer.parseInt(arrayIndexString);
+                } catch (NumberFormatException numberFormatException) {
                     return null;
                 }
                 if (!key.isEmpty()) {
-                    JSONObject obj = current.isObject();
-                    if (obj == null) return null;
-                    current = obj.get(key);
+                    JSONObject jsonObject = current.isObject();
+                    if (jsonObject == null) return null;
+                    current = jsonObject.get(key);
                 }
-                JSONArray arr = current == null ? null : current.isArray();
-                if (arr == null) return null;
-                current = arr.get(index);
+                JSONArray jsonArray = current == null ? null : current.isArray();
+                if (jsonArray == null) return null;
+                current = jsonArray.get(arrayElementIndex);
             } else {
-                JSONObject obj = current.isObject();
-                if (obj == null) return null;
-                current = obj.get(part);
+                JSONObject jsonObject = current.isObject();
+                if (jsonObject == null) return null;
+                current = jsonObject.get(part);
             }
         }
         if (current == null) return null;
@@ -289,11 +289,11 @@ public final class StepRunner {
         }
         String[] lines = headersText.split("\n");
         for (String line : lines) {
-            int colon = line.indexOf(':');
-            if (colon < 0) continue;
-            String key = line.substring(0, colon).trim();
+            int colonIndex = line.indexOf(':');
+            if (colonIndex < 0) continue;
+            String key = line.substring(0, colonIndex).trim();
             if (key.equalsIgnoreCase(headerName)) {
-                return line.substring(colon + 1).trim();
+                return line.substring(colonIndex + 1).trim();
             }
         }
         return null;
@@ -304,23 +304,23 @@ public final class StepRunner {
     // -------------------------------------------------------------------------
 
     public String formatRunResponse(int statusCode, String headers, String body, long durationMs, String executedAt) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Executed At: ").append(executedAt)
+        StringBuilder formattedResponse = new StringBuilder();
+        formattedResponse.append("Executed At: ").append(executedAt)
           .append("  |  Duration: ").append(durationMs).append(" ms")
           .append("  |  Status: ").append(statusCode).append("\n\n");
-        sb.append("Headers:\n");
+        formattedResponse.append("Headers:\n");
         if (headers == null || headers.trim().isEmpty()) {
-            sb.append("(none)");
+            formattedResponse.append("(none)");
         } else {
-            sb.append(headers.trim());
+            formattedResponse.append(headers.trim());
         }
-        sb.append("\n\nBody:\n");
+        formattedResponse.append("\n\nBody:\n");
         if (body == null || body.isEmpty()) {
-            sb.append("(empty)");
+            formattedResponse.append("(empty)");
         } else {
-            sb.append(body);
+            formattedResponse.append(body);
         }
-        return sb.toString();
+        return formattedResponse.toString();
     }
 
     public static native String getNativeDateTime() /*-{
@@ -336,8 +336,8 @@ public final class StepRunner {
 
     private String selectedText(com.google.gwt.user.client.ui.ListBox listBox) {
         if (listBox == null) return "";
-        int idx = listBox.getSelectedIndex();
-        if (idx < 0 || idx >= listBox.getItemCount()) return "";
-        return listBox.getItemText(idx);
+        int selectedIndex = listBox.getSelectedIndex();
+        if (selectedIndex < 0 || selectedIndex >= listBox.getItemCount()) return "";
+        return listBox.getItemText(selectedIndex);
     }
 }
