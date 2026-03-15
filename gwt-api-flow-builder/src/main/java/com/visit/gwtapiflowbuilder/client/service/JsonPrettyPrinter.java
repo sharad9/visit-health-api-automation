@@ -9,16 +9,12 @@ public final class JsonPrettyPrinter {
     }
 
     public static String prettyPrint(JSONValue value) {
-        if (value == null) {
-            return "{}";
-        }
+        if (value == null) return "{}";
         return prettyPrintText(value.toString());
     }
 
     public static String prettyPrintText(String text) {
-        if (text == null) {
-            return "{}";
-        }
+        if (text == null) return "{}";
         try {
             return stringify(parse(text), null, 2);
         } catch (Throwable ignore) {

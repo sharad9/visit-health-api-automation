@@ -29,9 +29,7 @@ public final class TokenRenderer {
     // -------------------------------------------------------------------------
 
     public void ensureTokenTooltip() {
-        if (state.tokenTooltip != null) {
-            return;
-        }
+        if (state.tokenTooltip != null) return;
         Element tooltipElement = Document.get().createDivElement();
         tooltipElement.getStyle().setProperty(BaseStyle.Key.POSITION, "absolute");
         tooltipElement.getStyle().setProperty(BaseStyle.Key.Z_INDEX, "9999");
@@ -61,9 +59,7 @@ public final class TokenRenderer {
     }
 
     public void hideTokenTooltip() {
-        if (state.tokenTooltip == null) {
-            return;
-        }
+        if (state.tokenTooltip == null) return;
         state.tokenTooltip.getStyle().setProperty(BaseStyle.Key.DISPLAY, BaseStyle.Value.NONE);
     }
 
@@ -72,16 +68,12 @@ public final class TokenRenderer {
     // -------------------------------------------------------------------------
 
     public String resolveTokenValue(String token) {
-        if (token == null) {
-            return "";
-        }
+        if (token == null) return "";
         String key = token;
         if (key.startsWith("{{") && key.endsWith("}}")) {
             key = key.substring(2, key.length() - 2).trim();
         }
-        if (key.isEmpty()) {
-            return "";
-        }
+        if (key.isEmpty()) return "";
         for (KeyValueRow row : state.envVarRows) {
             if (key.equals(row.key.getValue())) {
                 return emptyIfNull(row.value.getValue(), "");
@@ -129,9 +121,7 @@ public final class TokenRenderer {
 
     public void renderTokenPreview(FlowPanel preview, String text) {
         preview.clear();
-        if (text == null || text.isEmpty()) {
-            return;
-        }
+        if (text == null || text.isEmpty()) return;
         int index = 0;
         while (index < text.length()) {
             int start = text.indexOf("{{", index);
@@ -299,9 +289,7 @@ public final class TokenRenderer {
     // -------------------------------------------------------------------------
 
     public String emptyIfNull(String value, String fallback) {
-        if (value == null || value.trim().isEmpty()) {
-            return fallback;
-        }
+        if (value == null || value.trim().isEmpty()) return fallback;
         return value;
     }
 

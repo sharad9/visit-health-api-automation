@@ -85,9 +85,7 @@ public final class FlowServer {
         StringBuilder sb = new StringBuilder();
         for (java.util.Map.Entry<String, java.util.List<String>> entry : headers.entrySet()) {
             String key = entry.getKey();
-            if (key == null) {
-                continue;
-            }
+            if (key == null) continue;
             java.util.List<String> values = entry.getValue();
             if (values == null || values.isEmpty()) {
                 sb.append(key).append(": ").append("\n");
@@ -340,9 +338,7 @@ public final class FlowServer {
                 if (payload.has("headers") && payload.get("headers").isJsonObject()) {
                     JsonObject headers = payload.getAsJsonObject("headers");
                     for (String key : headers.keySet()) {
-                        if (key == null) {
-                            continue;
-                        }
+                        if (key == null) continue;
                         String lower = key.toLowerCase();
                         if ("host".equals(lower) || "content-length".equals(lower)) {
                             continue;
@@ -375,9 +371,7 @@ public final class FlowServer {
                 error.addProperty("error", ex.getMessage() == null ? "Proxy error." : ex.getMessage());
                 sendJson(exchange, 500, error.toString());
             } finally {
-                if (conn != null) {
-                    conn.disconnect();
-                }
+                if (conn != null) conn.disconnect();
             }
         }
     }
@@ -458,30 +452,23 @@ public final class FlowServer {
                 stepsHtml.append(section("URL",
                         "<code style=\"word-break:break-all;font-size:12px;\">" + escHtml(s.resolvedUrl) + "</code>"));
                 stepsHtml.append(section("Request Headers", formatMapHtml(s.requestHeaders)));
-                if (s.requestBody != null && !s.requestBody.isBlank()) {
+                if (s.requestBody != null && !s.requestBody.isBlank())
                     stepsHtml.append(section("Request Body",
                             "<pre style=\"margin:0;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;\">"
                                     + escHtml(s.requestBody) + "</pre>"));
-                }
                 stepsHtml.append(section("Status",
                         "<code style=\"font-size:13px;font-weight:700;color:" + sc + ";\">"
                                 + s.statusCode + "</code>"));
-                if (!s.responseHeaders.isBlank()) {
+                if (!s.responseHeaders.isBlank())
                     stepsHtml.append(section("Response Headers",
                             "<pre style=\"margin:0;font-size:11px;overflow-x:auto;\">"
                                     + escHtml(s.responseHeaders) + "</pre>"));
-                }
-                if (s.responseBody != null && !s.responseBody.isBlank()) {
+                if (s.responseBody != null && !s.responseBody.isBlank())
                     stepsHtml.append(section("Response Body",
                             "<pre style=\"margin:0;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;\">"
                                     + escHtml(truncate(s.responseBody, 4000)) + "</pre>"));
-                }
-                if (checksHtml.length() > 0) {
-                    stepsHtml.append(section("Checks", checksHtml.toString()));
-                }
-                if (extractedHtml.length() > 0) {
-                    stepsHtml.append(section("Extracted Variables", extractedHtml.toString()));
-                }
+                if (checksHtml.length() > 0) stepsHtml.append(section("Checks", checksHtml.toString()));
+                if (extractedHtml.length() > 0) stepsHtml.append(section("Extracted Variables", extractedHtml.toString()));
 
                 stepsHtml.append("</div></details>\n");
                 idx++;

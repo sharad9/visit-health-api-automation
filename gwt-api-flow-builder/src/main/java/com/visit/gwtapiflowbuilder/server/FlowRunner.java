@@ -255,9 +255,7 @@ public final class FlowRunner {
             for (String varName : paths.keySet()) {
                 String path = paths.get(varName).getAsString();
                 String value = resolveJsonPath(responseBody, path);
-                if (value != null) {
-                    vars.put(stepId + "_REQUEST_BODY_" + varName, value);
-                }
+                if (value != null) vars.put(stepId + "_REQUEST_BODY_" + varName, value);
             }
         }
 
@@ -266,9 +264,7 @@ public final class FlowRunner {
             for (String varName : hvs.keySet()) {
                 String headerName = hvs.get(varName).getAsString();
                 String value = extractHeaderValue(responseHeaders, headerName);
-                if (value != null) {
-                    vars.put(stepId + "_REQUEST_HEADER_" + varName, value);
-                }
+                if (value != null) vars.put(stepId + "_REQUEST_HEADER_" + varName, value);
             }
         }
         return vars;
@@ -383,9 +379,7 @@ public final class FlowRunner {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
             if (e.getKey() == null) continue;
-            for (String v : e.getValue()) {
-                sb.append(e.getKey()).append(": ").append(v).append("\n");
-            }
+            for (String v : e.getValue()) sb.append(e.getKey()).append(": ").append(v).append("\n");
         }
         return sb.toString().trim();
     }

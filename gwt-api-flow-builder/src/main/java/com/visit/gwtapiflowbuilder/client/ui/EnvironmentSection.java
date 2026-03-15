@@ -159,9 +159,7 @@ public final class EnvironmentSection {
             return;
         }
         state.environments.remove(state.activeEnvIndex);
-        if (state.activeEnvIndex >= state.environments.size()) {
-            state.activeEnvIndex = state.environments.size() - 1;
-        }
+        if (state.activeEnvIndex >= state.environments.size()) state.activeEnvIndex = state.environments.size() - 1;
         refreshEnvironmentSelect();
         loadEnvironmentIntoUi(state.environments.get(state.activeEnvIndex));
         if (state.onUpdate != null) state.onUpdate.run();
@@ -192,16 +190,13 @@ public final class EnvironmentSection {
         } else {
             boolean hasBaseUrl = false;
             for (KeyValuePair pair : env.variables) {
-                if ("BASE_URL".equalsIgnoreCase(pair.key)) {
-                    hasBaseUrl = true;
-                }
+                if ("BASE_URL".equalsIgnoreCase(pair.key)) hasBaseUrl = true;
                 formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows,
                         pair.key, pair.value, "KEY", "VALUE");
             }
-            if (!hasBaseUrl) {
+            if (!hasBaseUrl)
                 formBuilder.addKeyValueRow(state.envVarsList, state.envVarRows,
                         "BASE_URL", env.baseUrl == null ? "" : env.baseUrl, "KEY", "VALUE");
-            }
         }
     }
 
@@ -234,8 +229,7 @@ public final class EnvironmentSection {
         for (EnvironmentItem env : state.environments) {
             state.envSelect.addItem(env.name);
         }
-        if (state.activeEnvIndex >= 0 && state.activeEnvIndex < state.envSelect.getItemCount()) {
+        if (state.activeEnvIndex >= 0 && state.activeEnvIndex < state.envSelect.getItemCount())
             state.envSelect.setSelectedIndex(state.activeEnvIndex);
-        }
     }
 }

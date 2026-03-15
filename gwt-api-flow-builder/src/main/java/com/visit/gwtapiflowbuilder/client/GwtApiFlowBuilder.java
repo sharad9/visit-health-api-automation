@@ -54,9 +54,7 @@ public class GwtApiFlowBuilder implements EntryPoint {
 
     private void render() {
         state.root = RootPanel.get("gwt-root");
-        if (state.root == null) {
-            state.root = RootPanel.get();
-        }
+        if (state.root == null) state.root = RootPanel.get();
         state.root.clear();
 
         RootPanel.get().getElement().getStyle().setProperty(BaseStyle.Key.MARGIN, "0");

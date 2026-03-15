@@ -77,9 +77,7 @@ public final class StepRunner {
             if (key.isEmpty()) continue;
             String value = tokenRenderer.replaceTokens(row.value.getValue());
             requestHeadersObject.put(key, new JSONString(value));
-            if ("content-type".equalsIgnoreCase(key)) {
-                hasContentType = true;
-            }
+            if ("content-type".equalsIgnoreCase(key)) hasContentType = true;
         }
 
         JSONObject requestBodyObject = new JSONObject();
@@ -96,18 +94,14 @@ public final class StepRunner {
         String serializedBody = null;
         if (bodyFieldCount > 0) {
             serializedBody = requestBodyObject.toString();
-            if (!hasContentType) {
-                requestHeadersObject.put("Content-Type", new JSONString("application/json"));
-            }
+            if (!hasContentType) requestHeadersObject.put("Content-Type", new JSONString("application/json"));
         }
 
         JSONObject payload = new JSONObject();
         payload.put("method", new JSONString(httpMethod.toString()));
         payload.put("url", new JSONString(resolvedUrl));
         payload.put("headers", requestHeadersObject);
-        if (serializedBody != null) {
-            payload.put("body", new JSONString(serializedBody));
-        }
+        if (serializedBody != null) payload.put("body", new JSONString(serializedBody));
 
         RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, PROXY_ENDPOINT);
         builder.setHeader("Content-Type", "application/json");
@@ -202,9 +196,7 @@ public final class StepRunner {
             varName = varName.trim();
             jsonPath = jsonPath.trim();
             String extracted = resolveJsonPath(parsedResponseBody, jsonPath);
-            if (extracted != null) {
-                state.runtimeVariables.put(stepId + "_REQUEST_BODY_" + varName, extracted);
-            }
+            if (extracted != null) state.runtimeVariables.put(stepId + "_REQUEST_BODY_" + varName, extracted);
         }
         for (KeyValueRow row : block.extractHeaders) {
             String varName = row.key.getValue();
@@ -215,9 +207,7 @@ public final class StepRunner {
             varName = varName.trim();
             headerName = headerName.trim();
             String extracted = extractHeaderValue(responseHeaders, headerName);
-            if (extracted != null) {
-                state.runtimeVariables.put(stepId + "_REQUEST_HEADER_" + varName, extracted);
-            }
+            if (extracted != null) state.runtimeVariables.put(stepId + "_REQUEST_HEADER_" + varName, extracted);
         }
     }
 

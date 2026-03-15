@@ -29,13 +29,9 @@ public final class FlowPersistenceService {
     // -------------------------------------------------------------------------
 
     public void saveFlow(String json) {
-        if (json == null || json.trim().isEmpty()) {
-            return;
-        }
+        if (json == null || json.trim().isEmpty()) return;
         String resolvedName = state.metaIdBox == null ? AppState.DEFAULT_FLOW_NAME : state.metaIdBox.getValue();
-        if (resolvedName == null || resolvedName.trim().isEmpty()) {
-            resolvedName = AppState.DEFAULT_FLOW_NAME;
-        }
+        if (resolvedName == null || resolvedName.trim().isEmpty()) resolvedName = AppState.DEFAULT_FLOW_NAME;
         final String flowName = resolvedName;
 
         Button saveButton = state.navbarView != null ? state.navbarView.saveButton : null;
@@ -104,13 +100,9 @@ public final class FlowPersistenceService {
             builder.sendRequest(null, new RequestCallback() {
                 @Override
                 public void onResponseReceived(Request request, Response response) {
-                    if (response.getStatusCode() != 200) {
-                        return;
-                    }
+                    if (response.getStatusCode() != 200) return;
                     String json = response.getText();
-                    if (json == null || json.trim().isEmpty()) {
-                        return;
-                    }
+                    if (json == null || json.trim().isEmpty()) return;
                     state.lastSavedJson = json;
                     state.lastSavedName = flowName;
                     state.dirty = false;
@@ -138,9 +130,7 @@ public final class FlowPersistenceService {
             builder.sendRequest(null, new RequestCallback() {
                 @Override
                 public void onResponseReceived(Request request, Response response) {
-                    if (response.getStatusCode() != 200) {
-                        return;
-                    }
+                    if (response.getStatusCode() != 200) return;
                     JSONValue parsedJsonValue;
                     try {
                         parsedJsonValue = JSONParser.parseStrict(response.getText());
@@ -148,9 +138,7 @@ public final class FlowPersistenceService {
                         return;
                     }
                     JSONArray flowNamesArray = parsedJsonValue.isArray();
-                    if (flowNamesArray == null || state.flowSelect == null) {
-                        return;
-                    }
+                    if (flowNamesArray == null || state.flowSelect == null) return;
                     state.flowSelect.clear();
                     state.flowSelect.addItem("Load flow...");
                     for (int i = 0; i < flowNamesArray.size(); i++) {
@@ -174,9 +162,7 @@ public final class FlowPersistenceService {
     }
 
     public void selectFlowName(String name) {
-        if (state.flowSelect == null || name == null) {
-            return;
-        }
+        if (state.flowSelect == null || name == null) return;
         for (int i = 0; i < state.flowSelect.getItemCount(); i++) {
             if (name.equals(state.flowSelect.getItemText(i))) {
                 state.flowSelect.setSelectedIndex(i);

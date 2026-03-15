@@ -46,9 +46,7 @@ public class SectionView {
         toggleButton.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
 
         header.add(headerTitle);
-        if (collapsible) {
-            header.add(toggleButton);
-        }
+        if (collapsible) header.add(toggleButton);
 
         FlowPanel bodyWrap = new FlowPanel();
         bodyWrap.getElement().getStyle().setProperty(BaseStyle.Key.PADDING, Theme.PAD_SECTION_BODY);
@@ -77,18 +75,10 @@ public class SectionView {
     }
 
     private String sectionTitle(String title) {
-        if ("Meta".equalsIgnoreCase(title)) {
-            return "▤ Meta";
-        }
-        if ("Environment".equalsIgnoreCase(title)) {
-            return "◍ Environment";
-        }
-        if ("Global Inputs".equalsIgnoreCase(title)) {
-            return "⌗ Inputs";
-        }
-        if ("Steps".equalsIgnoreCase(title)) {
-            return "▸ Steps";
-        }
+        if ("Meta".equalsIgnoreCase(title)) return "▤ Meta";
+        if ("Environment".equalsIgnoreCase(title)) return "◍ Environment";
+        if ("Global Inputs".equalsIgnoreCase(title)) return "⌗ Inputs";
+        if ("Steps".equalsIgnoreCase(title)) return "▸ Steps";
         return title;
     }
 }

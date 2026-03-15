@@ -60,25 +60,19 @@ public class NavbarView {
         runButton.getElement().getStyle().setProperty(BaseStyle.Key.CURSOR, BaseStyle.Value.POINTER);
         runButton.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEMPLATE);
         runButton.getElement().getStyle().setProperty(BaseStyle.Key.BORDER_COLOR, Theme.COLOR_TEMPLATE);
-        if (onRun != null) {
-            runButton.addClickHandler(onRun);
-        }
+        if (onRun != null) runButton.addClickHandler(onRun);
 
         saveButton = UiFactory.outlineButton("Save");
         saveButton.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
         saveButton.getElement().getStyle().setProperty(BaseStyle.Key.CURSOR, BaseStyle.Value.POINTER);
-        if (onSave != null) {
-            saveButton.addClickHandler(onSave);
-        }
+        if (onSave != null) saveButton.addClickHandler(onSave);
 
         Button toggleButton = UiFactory.ghostButton(toggleLabel);
         toggleButton.getElement().getStyle().setProperty(BaseStyle.Key.BORDER, "1px solid " + Theme.COLOR_BORDER);
         toggleButton.getElement().getStyle().setProperty(BaseStyle.Key.BACKGROUND_COLOR, Theme.COLOR_PANEL);
         toggleButton.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
         toggleButton.getElement().getStyle().setProperty(BaseStyle.Key.COLOR, Theme.COLOR_TEXT);
-        if (onToggle != null) {
-            toggleButton.addClickHandler(onToggle);
-        }
+        if (onToggle != null) toggleButton.addClickHandler(onToggle);
 
         if (flowSelect != null) {
             flowSelect.getElement().getStyle().setProperty(BaseStyle.Key.FONT_SIZE, Theme.FONT_SIZE_68);
@@ -96,9 +90,7 @@ public class NavbarView {
         rightPanel.add(runButton);
         rightPanel.add(saveButton);
         rightPanel.add(toggleButton);
-        if (flowSelect != null) {
-            rightPanel.add(flowSelect);
-        }
+        if (flowSelect != null) rightPanel.add(flowSelect);
         rightPanel.add(productTag);
 
         navbar.add(leftPanel);

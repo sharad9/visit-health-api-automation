@@ -33,9 +33,7 @@ public final class FlowJsonBuilder {
 
         EnvironmentItem activeEnvironment = environments.get(activeEnvIndex);
         JSONObject environmentObject = new JSONObject();
-        if (notEmpty(activeEnvironment.baseUrl)) {
-            environmentObject.put("baseUrl", jsonString(activeEnvironment.baseUrl));
-        }
+        if (notEmpty(activeEnvironment.baseUrl)) environmentObject.put("baseUrl", jsonString(activeEnvironment.baseUrl));
         environmentObject.put("defaults", defaultsObject(activeEnvironment.timeoutMs, activeEnvironment.retryCount, activeEnvironment.retryDelay));
         root.put("environment", environmentObject);
 
@@ -47,23 +45,17 @@ public final class FlowJsonBuilder {
             JSONObject envJson = new JSONObject();
             envJson.put("environmentId", jsonString(env.id));
             envJson.put("environmentName", jsonString(env.name));
-            if (notEmpty(env.baseUrl)) {
-                envJson.put("baseUrl", jsonString(env.baseUrl));
-            }
+            if (notEmpty(env.baseUrl)) envJson.put("baseUrl", jsonString(env.baseUrl));
             envJson.put("defaults", defaultsObject(env.timeoutMs, env.retryCount, env.retryDelay));
             JSONObject environmentVariablesObject = toObject(env.variables);
-            if (environmentVariablesObject.size() > 0) {
-                envJson.put("environmentVariables", environmentVariablesObject);
-            }
+            if (environmentVariablesObject.size() > 0) envJson.put("environmentVariables", environmentVariablesObject);
             environmentItemsArray.set(envIndex++, envJson);
         }
         environmentsJson.put("environmentItems", environmentItemsArray);
         root.put("environments", environmentsJson);
 
         JSONObject globalInputs = toObject(toPairs(globalInputRows));
-        if (globalInputs.size() > 0) {
-            root.put("globalInputs", globalInputs);
-        }
+        if (globalInputs.size() > 0) root.put("globalInputs", globalInputs);
 
         JSONArray stepsJsonArray = new JSONArray();
         int stepIndex = 0;
@@ -74,9 +66,7 @@ public final class FlowJsonBuilder {
             JSONObject requestObject = new JSONObject();
             requestObject.put("httpMethod", jsonString(selectedText(step.method)));
             requestObject.put("requestUrl", jsonString(step.url.getValue()));
-            if (notEmpty(step.timeoutMs.getValue())) {
-                requestObject.put("timeoutMilliseconds", jsonNumber(step.timeoutMs.getValue()));
-            }
+            if (notEmpty(step.timeoutMs.getValue())) requestObject.put("timeoutMilliseconds", jsonNumber(step.timeoutMs.getValue()));
             if (notEmpty(step.retryCount.getValue())) {
                 JSONObject retryPolicyObject = new JSONObject();
                 retryPolicyObject.put("maximumAttempts", jsonNumber(step.retryCount.getValue()));
@@ -85,36 +75,22 @@ public final class FlowJsonBuilder {
             }
 
             JSONObject headersObject = toObject(toPairs(step.headers));
-            if (headersObject.size() > 0) {
-                requestObject.put("headers", headersObject);
-            }
+            if (headersObject.size() > 0) requestObject.put("headers", headersObject);
             JSONObject requestVariablesObject = toObject(toPairs(step.requestVariables));
-            if (requestVariablesObject.size() > 0) {
-                requestObject.put("requestVariables", requestVariablesObject);
-            }
+            if (requestVariablesObject.size() > 0) requestObject.put("requestVariables", requestVariablesObject);
             JSONObject bodyObject = toObjectParsed(step.body);
-            if (bodyObject.size() > 0) {
-                requestObject.put("body", bodyObject);
-            }
+            if (bodyObject.size() > 0) requestObject.put("body", bodyObject);
             stepJson.put("request", requestObject);
 
             JSONObject extractionObject = new JSONObject();
             JSONObject extractBodyObject = toObject(toPairs(step.extractBody));
             JSONObject extractHeadersObject = toObject(toPairs(step.extractHeaders));
-            if (extractBodyObject.size() > 0) {
-                extractionObject.put("bodyJsonPaths", extractBodyObject);
-            }
-            if (extractHeadersObject.size() > 0) {
-                extractionObject.put("headerValues", extractHeadersObject);
-            }
-            if (extractionObject.size() > 0) {
-                stepJson.put("extraction", extractionObject);
-            }
+            if (extractBodyObject.size() > 0) extractionObject.put("bodyJsonPaths", extractBodyObject);
+            if (extractHeadersObject.size() > 0) extractionObject.put("headerValues", extractHeadersObject);
+            if (extractionObject.size() > 0) stepJson.put("extraction", extractionObject);
 
             JSONArray checksArray = toChecks(step.checks);
-            if (checksArray.size() > 0) {
-                stepJson.put("checks", checksArray);
-            }
+            if (checksArray.size() > 0) stepJson.put("checks", checksArray);
 
             stepsJsonArray.set(stepIndex++, stepJson);
         }
@@ -136,9 +112,7 @@ public final class FlowJsonBuilder {
     private static JSONObject toObject(List<KeyValuePair> pairs) {
         JSONObject result = new JSONObject();
         for (KeyValuePair pair : pairs) {
-            if (notEmpty(pair.key)) {
-                result.put(pair.key, jsonString(pair.value));
-            }
+            if (notEmpty(pair.key)) result.put(pair.key, jsonString(pair.value));
         }
         return result;
     }
@@ -147,9 +121,7 @@ public final class FlowJsonBuilder {
         JSONObject result = new JSONObject();
         for (KeyValueRow row : rows) {
             String key = row.key.getValue();
-            if (notEmpty(key)) {
-                result.put(key, parseValue(row.value.getValue()));
-            }
+            if (notEmpty(key)) result.put(key, parseValue(row.value.getValue()));
         }
         return result;
     }
@@ -159,20 +131,12 @@ public final class FlowJsonBuilder {
         int insertIndex = 0;
         for (CheckRow row : rows) {
             String source = selectedText(row.source);
-            if (!notEmpty(source)) {
-                continue;
-            }
+            if (!notEmpty(source)) continue;
             JSONObject checkObject = new JSONObject();
             checkObject.put("source", jsonString(source));
-            if (notEmpty(row.path.getValue())) {
-                checkObject.put("jsonPath", jsonString(row.path.getValue()));
-            }
-            if (notEmpty(row.equals.getValue())) {
-                checkObject.put("equals", parseValue(row.equals.getValue()));
-            }
-            if (row.exists.getValue()) {
-                checkObject.put("exists", JSONBoolean.getInstance(true));
-            }
+            if (notEmpty(row.path.getValue())) checkObject.put("jsonPath", jsonString(row.path.getValue()));
+            if (notEmpty(row.equals.getValue())) checkObject.put("equals", parseValue(row.equals.getValue()));
+            if (row.exists.getValue()) checkObject.put("exists", JSONBoolean.getInstance(true));
             result.set(insertIndex++, checkObject);
         }
         return result;
@@ -221,9 +185,7 @@ public final class FlowJsonBuilder {
     }
 
     private static JSONValue jsonNumber(String value) {
-        if (!notEmpty(value)) {
-            return new JSONNumber(0);
-        }
+        if (!notEmpty(value)) return new JSONNumber(0);
         try {
             return new JSONNumber(Double.parseDouble(value));
         } catch (NumberFormatException numberFormatException) {
